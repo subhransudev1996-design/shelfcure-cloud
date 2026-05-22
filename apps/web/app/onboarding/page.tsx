@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { rpcCreateOrgWithOwner, DomainError } from '@shelfcure/api-client';
 import { getSupabaseBrowserClient } from '../../lib/supabase/client';
+import { AuthShell } from '../../components/auth-shell';
+import { Field, SubmitButton, Alert } from '../../components/form-fields';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -29,7 +31,6 @@ export default function OnboardingPage() {
       router.refresh();
     } catch (e) {
       if (e instanceof DomainError && e.code === 'profile_already_exists') {
-        // Already onboarded — just go to dashboard.
         router.push('/dashboard');
         return;
       }
@@ -39,77 +40,64 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main style={containerStyle}>
-      <h1 style={{ marginBottom: '0.5rem' }}>Tell us about your pharmacy</h1>
-      <p style={{ marginBottom: '1.5rem', color: '#555' }}>
-        Your 14-day trial starts as soon as your organization is created.
-      </p>
-      <form onSubmit={onSubmit} style={formStyle}>
-        <label style={labelStyle}>
-          Organization name
-          <input
-            type="text"
-            value={orgName}
-            onChange={(e) => setOrgName(e.target.value)}
-            required
-            minLength={2}
-            maxLength={120}
-            placeholder="e.g. Sharma Medicals"
-            style={inputStyle}
-          />
-        </label>
-        <label style={labelStyle}>
-          Your full name
-          <input
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            minLength={2}
-            maxLength={120}
-            style={inputStyle}
-          />
-        </label>
-        <label style={labelStyle}>
-          Phone (optional)
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+91 9000000000"
-            style={inputStyle}
-          />
-        </label>
-        {error && <p style={errorStyle}>{error}</p>}
-        <button type="submit" disabled={loading} style={buttonStyle}>
-          {loading ? 'Creating…' : 'Create organization'}
-        </button>
+    <AuthShell
+      heading="Tell us about your pharmacy"
+      sub="Takes 30 seconds. You can add stores and invite your team next."
+      tagline="One organization. Many stores. Total control."
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
+        <Field
+          label="Organization name"
+          value={orgName}
+          onChange={(e) => setOrgName(e.target.value)}
+          required
+          minLength={2}
+          maxLength={120}
+          placeholder="e.g. Sharma Medicals"
+          hint="The legal name of your pharmacy business."
+        />
+        <Field
+          label="Your full name"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          required
+          minLength={2}
+          maxLength={120}
+          placeholder="Owner / founder name"
+        />
+        <Field
+          label="Phone (optional)"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="+91 9000000000"
+        />
+        {error && <Alert variant="error">{error}</Alert>}
+        <SubmitButton loading={loading}>
+          {loading ? 'Setting things up…' : 'Create organization'}
+        </SubmitButton>
       </form>
-    </main>
+
+      <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
+        <div className="flex gap-3">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+              <path
+                d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+          <div className="text-sm text-emerald-900">
+            <p className="font-medium">Your 14-day trial starts now.</p>
+            <p className="mt-0.5 text-emerald-800/80">
+              All features unlocked. No card required. Cancel anytime.
+            </p>
+          </div>
+        </div>
+      </div>
+    </AuthShell>
   );
 }
-
-const containerStyle: React.CSSProperties = {
-  maxWidth: 480,
-  margin: '4rem auto',
-  padding: '2rem',
-  fontFamily: 'system-ui, sans-serif',
-};
-const formStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1rem' };
-const labelStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '0.25rem' };
-const inputStyle: React.CSSProperties = {
-  padding: '0.5rem 0.75rem',
-  border: '1px solid #ccc',
-  borderRadius: 4,
-  fontSize: '1rem',
-};
-const buttonStyle: React.CSSProperties = {
-  padding: '0.625rem 1rem',
-  background: '#111',
-  color: '#fff',
-  border: 0,
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: '1rem',
-};
-const errorStyle: React.CSSProperties = { color: '#b00', fontSize: '0.9rem', margin: 0 };

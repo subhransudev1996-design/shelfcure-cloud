@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getSupabaseBrowserClient } from '../../lib/supabase/client';
+import { AuthShell } from '../../components/auth-shell';
+import { Field, SubmitButton, Alert } from '../../components/form-fields';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,64 +33,52 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={containerStyle}>
-      <h1 style={{ marginBottom: '1.5rem' }}>Sign in to ShelfCure Cloud</h1>
-      <form onSubmit={onSubmit} style={formStyle}>
-        <label style={labelStyle}>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            style={inputStyle}
-          />
-        </label>
-        <label style={labelStyle}>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            style={inputStyle}
-          />
-        </label>
-        {error && <p style={errorStyle}>{error}</p>}
-        <button type="submit" disabled={loading} style={buttonStyle}>
-          {loading ? 'Signing in…' : 'Sign in'}
-        </button>
+    <AuthShell
+      heading="Welcome back"
+      sub="Sign in to manage your pharmacy operations."
+      tagline="Welcome back. Your stores are in good hands."
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
+        <Field
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+          placeholder="you@pharmacy.com"
+        />
+        <Field
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          autoComplete="current-password"
+          placeholder="••••••••"
+          trailing={
+            <Link
+              href="#"
+              className="text-xs font-medium text-emerald-700 hover:text-emerald-800"
+            >
+              Forgot password?
+            </Link>
+          }
+        />
+        {error && <Alert variant="error">{error}</Alert>}
+        <SubmitButton loading={loading}>{loading ? 'Signing in…' : 'Sign in'}</SubmitButton>
       </form>
-      <p style={{ marginTop: '1rem' }}>
-        New here? <Link href="/signup">Create an account</Link>
+
+      <p className="mt-6 text-center text-sm text-zinc-600">
+        New to ShelfCure?{' '}
+        <Link href="/signup" className="font-medium text-emerald-700 hover:text-emerald-800">
+          Create an account
+        </Link>
       </p>
-    </main>
+
+      <p className="mt-8 text-center text-xs text-zinc-400">
+        By signing in you agree to our Terms and Privacy Policy.
+      </p>
+    </AuthShell>
   );
 }
-
-const containerStyle: React.CSSProperties = {
-  maxWidth: 420,
-  margin: '4rem auto',
-  padding: '2rem',
-  fontFamily: 'system-ui, sans-serif',
-};
-const formStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1rem' };
-const labelStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '0.25rem' };
-const inputStyle: React.CSSProperties = {
-  padding: '0.5rem 0.75rem',
-  border: '1px solid #ccc',
-  borderRadius: 4,
-  fontSize: '1rem',
-};
-const buttonStyle: React.CSSProperties = {
-  padding: '0.625rem 1rem',
-  background: '#111',
-  color: '#fff',
-  border: 0,
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: '1rem',
-};
-const errorStyle: React.CSSProperties = { color: '#b00', fontSize: '0.9rem', margin: 0 };

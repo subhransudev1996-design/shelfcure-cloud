@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getSupabaseBrowserClient } from '../../lib/supabase/client';
+import { AuthShell } from '../../components/auth-shell';
+import { Field, SubmitButton, Alert } from '../../components/form-fields';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -32,10 +34,8 @@ export default function SignupPage() {
       return;
     }
 
-    // If email confirmation is enabled in Supabase Auth settings, session will be null
-    // and the user must click the email link before logging in.
     if (!data.session) {
-      setInfo('Check your email to confirm your account.');
+      setInfo(`We sent a confirmation link to ${email}. Click it to activate your account.`);
       setLoading(false);
       return;
     }
@@ -45,67 +45,61 @@ export default function SignupPage() {
   }
 
   return (
-    <main style={containerStyle}>
-      <h1 style={{ marginBottom: '1.5rem' }}>Create your ShelfCure Cloud account</h1>
-      <form onSubmit={onSubmit} style={formStyle}>
-        <label style={labelStyle}>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            style={inputStyle}
-          />
-        </label>
-        <label style={labelStyle}>
-          Password (8+ chars)
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-            autoComplete="new-password"
-            style={inputStyle}
-          />
-        </label>
-        {error && <p style={errorStyle}>{error}</p>}
-        {info && <p style={infoStyle}>{info}</p>}
-        <button type="submit" disabled={loading} style={buttonStyle}>
-          {loading ? 'Creating…' : 'Create account'}
-        </button>
+    <AuthShell
+      heading="Start your 14-day trial"
+      sub="No credit card required. Cancel anytime."
+      tagline="Built for India. Made for chains. Loved by single stores."
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
+        <Field
+          label="Work email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+          placeholder="you@pharmacy.com"
+        />
+        <Field
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={8}
+          autoComplete="new-password"
+          placeholder="At least 8 characters"
+          hint="Use a strong, unique password."
+        />
+        {error && <Alert variant="error">{error}</Alert>}
+        {info && <Alert variant="success">{info}</Alert>}
+        <SubmitButton loading={loading}>
+          {loading ? 'Creating account…' : 'Create account'}
+        </SubmitButton>
       </form>
-      <p style={{ marginTop: '1rem' }}>
-        Already have an account? <Link href="/login">Sign in</Link>
+
+      <p className="mt-6 text-center text-sm text-zinc-600">
+        Already have an account?{' '}
+        <Link href="/login" className="font-medium text-emerald-700 hover:text-emerald-800">
+          Sign in
+        </Link>
       </p>
-    </main>
+
+      <div className="mt-8 grid grid-cols-3 gap-3">
+        {[
+          { v: '14 days', l: 'Free trial' },
+          { v: 'No card', l: 'Required' },
+          { v: 'GST ready', l: 'Day one' },
+        ].map((b) => (
+          <div
+            key={b.l}
+            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-center"
+          >
+            <div className="text-sm font-semibold text-zinc-900">{b.v}</div>
+            <div className="text-[11px] uppercase tracking-wide text-zinc-500">{b.l}</div>
+          </div>
+        ))}
+      </div>
+    </AuthShell>
   );
 }
-
-const containerStyle: React.CSSProperties = {
-  maxWidth: 420,
-  margin: '4rem auto',
-  padding: '2rem',
-  fontFamily: 'system-ui, sans-serif',
-};
-const formStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '1rem' };
-const labelStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: '0.25rem' };
-const inputStyle: React.CSSProperties = {
-  padding: '0.5rem 0.75rem',
-  border: '1px solid #ccc',
-  borderRadius: 4,
-  fontSize: '1rem',
-};
-const buttonStyle: React.CSSProperties = {
-  padding: '0.625rem 1rem',
-  background: '#111',
-  color: '#fff',
-  border: 0,
-  borderRadius: 4,
-  cursor: 'pointer',
-  fontSize: '1rem',
-};
-const errorStyle: React.CSSProperties = { color: '#b00', fontSize: '0.9rem', margin: 0 };
-const infoStyle: React.CSSProperties = { color: '#060', fontSize: '0.9rem', margin: 0 };
