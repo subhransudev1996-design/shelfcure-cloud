@@ -8,10 +8,12 @@
   "scripts": {
     "lint": "eslint src --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"no tests yet\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "clean": "rm -rf .turbo dist *.tsbuildinfo"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
   }
 }
