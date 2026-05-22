@@ -3085,7 +3085,6 @@ export type Database = {
         Returns: undefined
       }
       current_org: { Args: never; Returns: string }
-      current_role: { Args: never; Returns: string }
       current_store: { Args: never; Returns: string }
       log_audit: {
         Args: {
@@ -3163,6 +3162,7 @@ export type Database = {
         Returns: boolean
       }
       user_org_has_shared_masters: { Args: never; Returns: boolean }
+      user_role: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
