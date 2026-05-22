@@ -3087,11 +3087,75 @@ export type Database = {
       current_org: { Args: never; Returns: string }
       current_role: { Args: never; Returns: string }
       current_store: { Args: never; Returns: string }
+      log_audit: {
+        Args: {
+          p_action: string
+          p_after?: Json
+          p_before?: Json
+          p_entity: string
+          p_entity_id: string
+          p_org_id: string
+          p_store_id: string
+        }
+        Returns: undefined
+      }
+      rpc_commit_purchase: {
+        Args: { p_payload: Json }
+        Returns: {
+          bill_number: string
+          purchase_id: string
+        }[]
+      }
+      rpc_commit_purchase_return: {
+        Args: { p_payload: Json }
+        Returns: {
+          return_id: string
+          return_number: string
+        }[]
+      }
+      rpc_commit_sale: {
+        Args: { p_payload: Json }
+        Returns: {
+          bill_number: string
+          sale_id: string
+        }[]
+      }
+      rpc_commit_sale_return: {
+        Args: { p_payload: Json }
+        Returns: {
+          return_id: string
+          return_number: string
+        }[]
+      }
       rpc_create_org_with_owner: {
         Args: { p_full_name: string; p_org_name: string; p_phone?: string }
         Returns: {
           org_id: string
           profile_id: string
+        }[]
+      }
+      rpc_stock_correction: {
+        Args: {
+          p_batch_id: string
+          p_client_uuid?: string
+          p_delta: number
+          p_reason: string
+        }
+        Returns: string
+      }
+      rpc_stock_transfer_approve: {
+        Args: { p_approvals: Json; p_transfer_id: string }
+        Returns: undefined
+      }
+      rpc_stock_transfer_receive: {
+        Args: { p_receipts: Json; p_transfer_id: string }
+        Returns: undefined
+      }
+      rpc_stock_transfer_request: {
+        Args: { p_payload: Json }
+        Returns: {
+          transfer_id: string
+          transfer_no: string
         }[]
       }
       user_has_store_access: {
