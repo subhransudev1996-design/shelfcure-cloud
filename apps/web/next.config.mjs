@@ -9,9 +9,7 @@ const nextConfig = {
     '@shelfcure/hotkeys',
     '@shelfcure/i18n',
   ],
-  experimental: {
-    typedRoutes: true,
-  },
+  typedRoutes: true,
 };
 
 export default nextConfig;
