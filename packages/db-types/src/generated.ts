@@ -14,6 +14,428 @@ export type Database = {
   }
   public: {
     Tables: {
+      batches: {
+        Row: {
+          barcode: string | null
+          batch_number: string
+          created_at: string
+          current_quantity: number
+          deleted_at: string | null
+          expiry_date: string
+          gst_percentage: number
+          id: string
+          initial_quantity: number
+          is_blocked: boolean
+          medicine_id: string
+          mrp: number
+          org_id: string
+          purchase_rate: number
+          selling_price: number | null
+          store_id: string
+          supplier_id: string | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          barcode?: string | null
+          batch_number: string
+          created_at?: string
+          current_quantity?: number
+          deleted_at?: string | null
+          expiry_date: string
+          gst_percentage?: number
+          id?: string
+          initial_quantity?: number
+          is_blocked?: boolean
+          medicine_id: string
+          mrp?: number
+          org_id: string
+          purchase_rate?: number
+          selling_price?: number | null
+          store_id: string
+          supplier_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          barcode?: string | null
+          batch_number?: string
+          created_at?: string
+          current_quantity?: number
+          deleted_at?: string | null
+          expiry_date?: string
+          gst_percentage?: number
+          id?: string
+          initial_quantity?: number
+          is_blocked?: boolean
+          medicine_id?: string
+          mrp?: number
+          org_id?: string
+          purchase_rate?: number
+          selling_price?: number | null
+          store_id?: string
+          supplier_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batches_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "medicines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batches_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batches_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batches_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batches_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_regular_medicines: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          interval_days: number | null
+          last_dispensed_date: string | null
+          medicine_id: string
+          next_due_date: string | null
+          notes: string | null
+          org_id: string
+          remind_days_before: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          interval_days?: number | null
+          last_dispensed_date?: string | null
+          medicine_id: string
+          next_due_date?: string | null
+          notes?: string | null
+          org_id: string
+          remind_days_before?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          interval_days?: number | null
+          last_dispensed_date?: string | null
+          medicine_id?: string
+          next_due_date?: string | null
+          notes?: string | null
+          org_id?: string
+          remind_days_before?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_regular_medicines_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_regular_medicines_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "medicines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_regular_medicines_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          credit_days: number | null
+          credit_limit: number | null
+          customer_type: string
+          deleted_at: string | null
+          email: string | null
+          gstin: string | null
+          id: string
+          is_active: boolean
+          last_purchase_date: string | null
+          name: string
+          org_id: string
+          outstanding_balance: number
+          phone: string
+          special_discount_label: string | null
+          special_discount_type: string | null
+          special_discount_value: number
+          state: string | null
+          store_id: string | null
+          total_purchases: number
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          credit_days?: number | null
+          credit_limit?: number | null
+          customer_type?: string
+          deleted_at?: string | null
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          last_purchase_date?: string | null
+          name: string
+          org_id: string
+          outstanding_balance?: number
+          phone?: string
+          special_discount_label?: string | null
+          special_discount_type?: string | null
+          special_discount_value?: number
+          state?: string | null
+          store_id?: string | null
+          total_purchases?: number
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          credit_days?: number | null
+          credit_limit?: number | null
+          customer_type?: string
+          deleted_at?: string | null
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          last_purchase_date?: string | null
+          name?: string
+          org_id?: string
+          outstanding_balance?: number
+          phone?: string
+          special_discount_label?: string | null
+          special_discount_type?: string | null
+          special_discount_value?: number
+          state?: string | null
+          store_id?: string | null
+          total_purchases?: number
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_commission_payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          deleted_at: string | null
+          doctor_id: string
+          id: string
+          notes: string | null
+          org_id: string
+          paid_at: string
+          paid_by: string | null
+          store_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          deleted_at?: string | null
+          doctor_id: string
+          id?: string
+          notes?: string | null
+          org_id: string
+          paid_at?: string
+          paid_by?: string | null
+          store_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          deleted_at?: string | null
+          doctor_id?: string
+          id?: string
+          notes?: string | null
+          org_id?: string
+          paid_at?: string
+          paid_by?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_commission_payouts_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_commission_payouts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_commission_payouts_paid_by_fkey"
+            columns: ["paid_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_commission_payouts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctors: {
+        Row: {
+          clinic_address: string | null
+          clinic_name: string | null
+          commission_rate: number
+          commission_type: string
+          created_at: string
+          deleted_at: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          org_id: string
+          phone: string | null
+          specialization: string | null
+          store_id: string | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          clinic_address?: string | null
+          clinic_name?: string | null
+          commission_rate?: number
+          commission_type?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          org_id: string
+          phone?: string | null
+          specialization?: string | null
+          store_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          clinic_address?: string | null
+          clinic_name?: string | null
+          commission_rate?: number
+          commission_type?: string
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          org_id?: string
+          phone?: string | null
+          specialization?: string | null
+          store_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctors_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctors_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctors_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dosage_forms: {
         Row: {
           base_unit: string
@@ -352,6 +774,103 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          city: string | null
+          contact_person: string | null
+          created_at: string
+          credit_days: number | null
+          credit_limit: number | null
+          deleted_at: string | null
+          email: string | null
+          gstin: string | null
+          id: string
+          is_active: boolean
+          name: string
+          opening_balance: number
+          org_id: string
+          outstanding_balance: number
+          phone: string | null
+          pincode: string | null
+          state: string | null
+          store_id: string | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          contact_person?: string | null
+          created_at?: string
+          credit_days?: number | null
+          credit_limit?: number | null
+          deleted_at?: string | null
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          opening_balance?: number
+          org_id: string
+          outstanding_balance?: number
+          phone?: string | null
+          pincode?: string | null
+          state?: string | null
+          store_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          contact_person?: string | null
+          created_at?: string
+          credit_days?: number | null
+          credit_limit?: number | null
+          deleted_at?: string | null
+          email?: string | null
+          gstin?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          opening_balance?: number
+          org_id?: string
+          outstanding_balance?: number
+          phone?: string | null
+          pincode?: string | null
+          state?: string | null
+          store_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suppliers_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suppliers_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
