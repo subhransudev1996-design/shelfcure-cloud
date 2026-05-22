@@ -1,0 +1,25 @@
+{
+  "name": "@shelfcure/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": ["src", "eslint", "tsconfig"],
+  "exports": {
+    ".": "./src/index.ts",
+    "./eslint-base": "./eslint/base.js",
+    "./eslint-react": "./eslint/react.js",
+    "./tsconfig-base": "./tsconfig/base.json",
+    "./tsconfig-react": "./tsconfig/react.json"
+  },
+  "scripts": {
+    "lint": "echo \"config: no source to lint\"",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"no tests yet\"",
+    "clean": "rm -rf .turbo dist *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

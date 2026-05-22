@@ -1,0 +1,7 @@
+node_modules
+dist
+.next
+.turbo
+src-tauri/target
+pnpm-lock.yaml
+*.md
