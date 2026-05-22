@@ -14,6 +14,229 @@ export type Database = {
   }
   public: {
     Tables: {
+      dosage_forms: {
+        Row: {
+          base_unit: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          base_unit: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          base_unit?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      medicine_categories: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          is_system: boolean
+          name: string
+          org_id: string
+          store_id: string | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name: string
+          org_id: string
+          store_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          name?: string
+          org_id?: string
+          store_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicine_categories_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicine_categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicine_categories_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medicines: {
+        Row: {
+          barcode: string | null
+          category_id: string | null
+          created_at: string
+          default_gst_rate: number
+          deleted_at: string | null
+          dosage_form_id: string
+          focus_label: string | null
+          hsn_code: string | null
+          id: string
+          is_favourite: boolean
+          is_focused: boolean
+          manufacturer: string
+          min_stock_level: number
+          name: string
+          org_id: string
+          pack_size: number
+          pack_unit: string
+          rack_location: string | null
+          reorder_level: number
+          sale_unit_mode: string
+          salt_composition: string | null
+          scan_confidence: number | null
+          store_id: string | null
+          strength: string | null
+          units_per_pack: number | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          barcode?: string | null
+          category_id?: string | null
+          created_at?: string
+          default_gst_rate?: number
+          deleted_at?: string | null
+          dosage_form_id: string
+          focus_label?: string | null
+          hsn_code?: string | null
+          id?: string
+          is_favourite?: boolean
+          is_focused?: boolean
+          manufacturer?: string
+          min_stock_level?: number
+          name: string
+          org_id: string
+          pack_size?: number
+          pack_unit?: string
+          rack_location?: string | null
+          reorder_level?: number
+          sale_unit_mode?: string
+          salt_composition?: string | null
+          scan_confidence?: number | null
+          store_id?: string | null
+          strength?: string | null
+          units_per_pack?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          barcode?: string | null
+          category_id?: string | null
+          created_at?: string
+          default_gst_rate?: number
+          deleted_at?: string | null
+          dosage_form_id?: string
+          focus_label?: string | null
+          hsn_code?: string | null
+          id?: string
+          is_favourite?: boolean
+          is_focused?: boolean
+          manufacturer?: string
+          min_stock_level?: number
+          name?: string
+          org_id?: string
+          pack_size?: number
+          pack_unit?: string
+          rack_location?: string | null
+          reorder_level?: number
+          sale_unit_mode?: string
+          salt_composition?: string | null
+          scan_confidence?: number | null
+          store_id?: string | null
+          strength?: string | null
+          units_per_pack?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicines_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "medicine_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicines_dosage_form_id_fkey"
+            columns: ["dosage_form_id"]
+            isOneToOne: false
+            referencedRelation: "dosage_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicines_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicines_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medicines_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           billing_status: string
@@ -215,6 +438,7 @@ export type Database = {
         Args: { target_store_id: string }
         Returns: boolean
       }
+      user_org_has_shared_masters: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
