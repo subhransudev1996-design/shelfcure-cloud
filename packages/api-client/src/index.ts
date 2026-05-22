@@ -1,4 +1,15 @@
-// @shelfcure/api-client — typed Supabase wrapper.
-// Phase 0: createClient factory + basic auth helpers.
-// Phase 1: per-domain modules (sales, purchases, stock, etc.) + RPC wrappers.
-export {};
+// @shelfcure/api-client — typed Supabase client factories + domain helpers.
+//
+// Two factories live here so that browser code and server code (Next.js
+// Server Components / Route Handlers / middleware) both get a typed client
+// without duplicating env-var plumbing.
+//
+// The browser factory uses the singleton from @supabase/ssr.
+// The server factory is a thin wrapper that the consuming app composes with
+// its own cookie store (Next.js cookies() / Express req).
+
+export { createBrowserSupabaseClient } from './browser';
+export { createServerSupabaseClient } from './server';
+export type { CookieStore } from './server';
+export * from './errors';
+export * from './rpc';
