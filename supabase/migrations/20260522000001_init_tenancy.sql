@@ -20,6 +20,10 @@
 create extension if not exists "pgcrypto"   with schema extensions;  -- gen_random_uuid()
 create extension if not exists "citext"     with schema extensions;  -- case-insensitive text (emails)
 
+-- Make the extensions schema visible to this migration so we can reference
+-- citext unqualified below. Supabase keeps extensions out of public.
+set local search_path = public, extensions, pg_catalog;
+
 
 -- ============================================================================
 -- Shared utility: updated_at trigger
