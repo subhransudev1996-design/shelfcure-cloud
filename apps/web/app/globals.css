@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* Explicitly tell Tailwind v4 which files to scan for utility classes.
+   Auto-detection sometimes misses sibling folders in Next.js setups. */
+@source "../app/**/*.{ts,tsx,js,jsx,mdx}";
+@source "../components/**/*.{ts,tsx,js,jsx,mdx}";
+
 /* ---------- Design tokens (Tailwind v4 @theme) ---------- */
 @theme {
   --font-sans:
