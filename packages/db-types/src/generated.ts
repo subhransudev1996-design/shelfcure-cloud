@@ -3157,6 +3157,7 @@ export type Database = {
           transfer_no: string
         }[]
       }
+      rpc_whoami: { Args: never; Returns: Json }
       user_has_store_access: {
         Args: { target_store_id: string }
         Returns: boolean
