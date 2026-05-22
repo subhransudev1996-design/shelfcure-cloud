@@ -20,9 +20,10 @@
 create extension if not exists "pgcrypto"   with schema extensions;  -- gen_random_uuid()
 create extension if not exists "citext"     with schema extensions;  -- case-insensitive text (emails)
 
--- Make the extensions schema visible to this migration so we can reference
--- citext unqualified below. Supabase keeps extensions out of public.
-set local search_path = public, extensions, pg_catalog;
+-- Supabase installs extensions into the `extensions` schema and does NOT add it
+-- to search_path. All extension types/functions must be schema-qualified
+-- (e.g. extensions.citext). `gen_random_uuid()` is built into Postgres 13+
+-- core so it works unqualified.
 
 
 -- ============================================================================
@@ -125,7 +126,7 @@ create table public.user_profiles (
   org_id          uuid not null references public.organizations(id) on delete restrict,
   store_id        uuid references public.stores(id) on delete restrict,         -- null for org-scoped roles
   full_name       text not null check (length(trim(full_name)) between 2 and 120),
-  email           citext not null,
+  email           extensions.citext not null,
   phone           text,
   role            text not null check (role in ('super_admin','store_admin','pharmacist','cashier','accountant')),
   pin_hash        text,
@@ -328,7 +329,7 @@ set search_path = public, pg_temp
 as $$
 declare
   v_user_id uuid := auth.uid();
-  v_user_email citext;
+  v_user_email extensions.citext;
   v_org_id uuid;
 begin
   if v_user_id is null then
@@ -339,7 +340,7 @@ begin
     raise exception 'profile_already_exists' using errcode = '23505';
   end if;
 
-  select email::citext into v_user_email from auth.users where id = v_user_id;
+  select email::extensions.citext into v_user_email from auth.users where id = v_user_id;
   if v_user_email is null then
     raise exception 'auth_user_missing_email' using errcode = '23502';
   end if;
