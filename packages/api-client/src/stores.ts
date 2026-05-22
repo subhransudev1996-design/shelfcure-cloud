@@ -4,7 +4,6 @@ import { mapSupabaseError } from './errors';
 
 type Client = SupabaseClient<Database>;
 type StoreRow = Database['public']['Tables']['stores']['Row'];
-type StoreInsert = Database['public']['Tables']['stores']['Insert'];
 
 export type Store = StoreRow;
 
@@ -27,6 +26,21 @@ export async function whoami(client: Client): Promise<WhoamiResult> {
   return data as unknown as WhoamiResult;
 }
 
+export interface PolicyRow {
+  policy_name: string;
+  cmd: string;
+  permissive: string;
+  roles: string[];
+  qual: string | null;
+  with_check: string | null;
+}
+
+export async function listPolicies(client: Client, tableName: string): Promise<PolicyRow[]> {
+  const { data, error } = await client.rpc('rpc_list_policies', { p_table: tableName });
+  if (error) throw mapSupabaseError(error);
+  return (data ?? []) as unknown as PolicyRow[];
+}
+
 export async function listStores(client: Client): Promise<Store[]> {
   const { data, error } = await client
     .from('stores')
@@ -47,37 +61,17 @@ export interface CreateStoreInput {
   drug_license_no?: string;
 }
 
+/**
+ * Create a store via the secure RPC.
+ *
+ * Why RPC instead of a raw .from('stores').insert()?
+ *   1) Sidesteps PostgREST-level RLS quirks that have bitten this table.
+ *   2) Centralises the super_admin check on the server (single source of truth).
+ *   3) Matches the pattern every other create-master-record op will follow
+ *      (rpc_commit_sale, rpc_commit_purchase, etc.).
+ */
 export async function createStore(client: Client, input: CreateStoreInput): Promise<Store> {
-  // Pre-flight: fetch our actual RLS context so we can give a clear error if
-  // anything is off (and surface the server's view if the insert still fails).
-  const ctx = await whoami(client);
-
-  if (!ctx.auth_uid) {
-    throw new Error('Not signed in. Please refresh and sign in again.');
-  }
-  if (!ctx.profile_id) {
-    throw new Error(
-      'Your user profile does not exist. Try signing out and going through onboarding again.',
-    );
-  }
-  if (ctx.profile_role !== 'super_admin') {
-    throw new Error(
-      `Only the organization super_admin can create stores. Your profile role is "${ctx.profile_role}".`,
-    );
-  }
-  if (ctx.user_role_fn !== 'super_admin') {
-    throw new Error(
-      `Server-side role check failed. user_role() returned "${ctx.user_role_fn}" but your profile says "${ctx.profile_role}". This is a server bug — please report.`,
-    );
-  }
-  if (!ctx.current_org_fn || ctx.current_org_fn !== ctx.profile_org) {
-    throw new Error(
-      `current_org() returned "${ctx.current_org_fn}" but your profile org_id is "${ctx.profile_org}". This is a server bug — please report.`,
-    );
-  }
-
-  const payload: StoreInsert = {
-    org_id: ctx.profile_org,
+  const payload = {
     code: input.code.trim().toUpperCase(),
     name: input.name.trim(),
     city: input.city?.trim() ?? '',
@@ -88,14 +82,16 @@ export async function createStore(client: Client, input: CreateStoreInput): Prom
     drug_license_no: input.drug_license_no?.trim() || null,
   };
 
-  const { data, error } = await client.from('stores').insert(payload).select('*').single();
+  const { data, error } = await client.rpc('rpc_create_store', { p_payload: payload as never });
+  if (error) throw mapSupabaseError(error);
 
-  if (error) {
-    const ctxStr = JSON.stringify(ctx, null, 2);
-    throw new Error(
-      `Insert failed: ${error.message}\n\nServer context at time of insert:\n${ctxStr}\n\nPayload org_id: ${payload.org_id}`,
-    );
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.id) throw mapSupabaseError(new Error('rpc_create_store returned no row'));
+
+  // Fetch the full Store row so consumers get the complete shape they expect.
+  const fetched = await client.from('stores').select('*').eq('id', row.id).single();
+  if (fetched.error || !fetched.data) {
+    throw mapSupabaseError(fetched.error ?? new Error('store created but read-back failed'));
   }
-
-  return data;
+  return fetched.data;
 }

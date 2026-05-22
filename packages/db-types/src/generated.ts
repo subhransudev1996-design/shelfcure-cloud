@@ -3133,6 +3133,25 @@ export type Database = {
           profile_id: string
         }[]
       }
+      rpc_create_store: {
+        Args: { p_payload: Json }
+        Returns: {
+          code: string
+          id: string
+          name: string
+        }[]
+      }
+      rpc_list_policies: {
+        Args: { p_table: string }
+        Returns: {
+          cmd: string
+          permissive: string
+          policy_name: string
+          qual: string
+          roles: string[]
+          with_check: string
+        }[]
+      }
       rpc_stock_correction: {
         Args: {
           p_batch_id: string
