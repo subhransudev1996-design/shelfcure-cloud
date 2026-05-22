@@ -16,5 +16,15 @@ export function createBrowserSupabaseClient() {
     );
   }
 
-  return createBrowserClient<Database>(url, key);
+  return createBrowserClient<Database>(url, key, {
+    // Realtime is wired in Phase 2 (sync engine). Disabling here avoids a
+    // WebSocket handshake on every page load that surfaces as
+    // `[object Event]` unhandled rejections in dev.
+    realtime: { params: { eventsPerSecond: 0 } },
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  });
 }
