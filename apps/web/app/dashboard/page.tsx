@@ -1,171 +1,74 @@
-import { redirect } from 'next/navigation';
 import { getSupabaseServerClient } from '../../lib/supabase/server';
-import { Brand } from '../../components/brand';
-import { SignOutButton } from './sign-out-button';
+import { PageHeader } from '../../components/ui/page-header';
 
-export default async function DashboardPage() {
+export default async function DashboardOverviewPage() {
   const supabase = await getSupabaseServerClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('id, full_name, role, store_id, org_id')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (!profile) redirect('/onboarding');
-
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('id, name, plan_tier, billing_status, trial_ends_at')
-    .eq('id', profile.org_id)
-    .maybeSingle();
-
-  const { data: stores } = await supabase
-    .from('stores')
-    .select('id, code, name, city, is_active')
-    .order('code', { ascending: true });
-
-  const initials =
-    profile.full_name
-      .split(/\s+/)
-      .map((p) => p[0])
-      .filter(Boolean)
-      .slice(0, 2)
-      .join('')
-      .toUpperCase() || '?';
+  const [{ data: org }, { data: profile }, { data: stores }, { data: medicines }, { data: customers }] =
+    await Promise.all([
+      supabase.from('organizations').select('name, plan_tier, billing_status, trial_ends_at').single(),
+      supabase.from('user_profiles').select('full_name, role').single(),
+      supabase.from('stores').select('id', { count: 'exact', head: false }),
+      supabase.from('medicines').select('id', { count: 'exact', head: false }).is('deleted_at', null),
+      supabase.from('customers').select('id', { count: 'exact', head: false }).is('deleted_at', null),
+    ]);
 
   const trialDaysLeft = org?.trial_ends_at
     ? Math.max(0, Math.ceil((new Date(org.trial_ends_at).getTime() - Date.now()) / 86400000))
     : null;
 
+  const firstName = profile?.full_name.split(' ')[0] ?? 'there';
+
   return (
-    <div className="min-h-screen bg-zinc-50">
-      {/* Top nav */}
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          <Brand size="sm" />
-          <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <div className="text-sm font-medium leading-tight text-zinc-900">
-                {profile.full_name}
-              </div>
-              <div className="text-xs text-zinc-500">{user.email}</div>
-            </div>
-            <div
-              className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 text-sm font-semibold text-white shadow-sm"
-              aria-hidden
-            >
-              {initials}
-            </div>
-            <SignOutButton />
-          </div>
-        </div>
-      </header>
+    <>
+      <PageHeader
+        eyebrow="Overview"
+        title={`Welcome back, ${firstName}`}
+        description="Here's a snapshot of your organization right now."
+      />
 
-      <main className="mx-auto max-w-6xl px-6 py-10">
-        {/* Hero */}
-        <section className="animate-fade-in-up">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-600">
-                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                Organization
-              </div>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-zinc-900">
-                {org?.name ?? 'Your organization'}
-              </h1>
-              <p className="mt-1.5 text-sm text-zinc-600">
-                Welcome back, {profile.full_name.split(' ')[0]}.
-              </p>
-            </div>
-            <RoleBadge role={profile.role} />
-          </div>
-        </section>
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Plan"
+          value={cap(org?.plan_tier ?? '—')}
+          sub={org?.billing_status ? cap(org.billing_status) : '—'}
+          tone="emerald"
+        />
+        <StatCard
+          label="Trial"
+          value={trialDaysLeft !== null ? `${trialDaysLeft} days left` : '—'}
+          sub={org?.trial_ends_at ? `Ends ${fmtDate(org.trial_ends_at)}` : ''}
+          tone="violet"
+        />
+        <StatCard label="Stores" value={String(stores?.length ?? 0)} sub="Total locations" />
+        <StatCard label="Medicines" value={String(medicines?.length ?? 0)} sub="Active SKUs" tone="emerald" />
+      </section>
 
-        {/* Stat cards */}
-        <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Plan"
-            value={cap(org?.plan_tier ?? '—')}
-            sub={org?.billing_status ? cap(org.billing_status) : '—'}
-            tone="emerald"
-          />
-          <StatCard
-            label="Trial"
-            value={trialDaysLeft !== null ? `${trialDaysLeft} days left` : '—'}
-            sub={org?.trial_ends_at ? `Ends ${fmtDate(org.trial_ends_at)}` : ''}
-            tone="violet"
-          />
-          <StatCard label="Stores" value={String(stores?.length ?? 0)} sub="Total locations" />
-          <StatCard label="Role" value={cap(profile.role.replace('_', ' '))} sub="Your access level" />
-        </section>
-
-        {/* Stores section */}
-        <section className="mt-10">
-          <div className="mb-4 flex items-end justify-between">
-            <div>
-              <h2 className="text-lg font-semibold tracking-tight text-zinc-900">Stores</h2>
-              <p className="text-sm text-zinc-500">Manage your pharmacy locations.</p>
-            </div>
-            <button
-              className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-500"
-              disabled
-              title="Adding stores lands in Phase 3"
-            >
-              <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Add store
-            </button>
-          </div>
-
-          {!stores?.length ? (
-            <EmptyStores />
-          ) : (
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {stores.map((s) => (
-                <li
-                  key={s.id}
-                  className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="text-xs font-mono font-medium uppercase tracking-wide text-emerald-700">
-                        {s.code}
-                      </div>
-                      <div className="mt-1 text-base font-semibold text-zinc-900">{s.name}</div>
-                      {s.city && <div className="text-sm text-zinc-500">{s.city}</div>}
-                    </div>
-                    {!s.is_active && (
-                      <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200">
-                        Disabled
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* Footer */}
-        <footer className="mt-16 border-t border-zinc-200 pt-6">
-          <p className="text-xs text-zinc-500">
-            Phase 0 preview · Auth + onboarding shipped. Stores/users/billing/transfers land in
-            Phase 3+.
-          </p>
-        </footer>
-      </main>
-    </div>
+      <section className="mt-10 grid gap-4 lg:grid-cols-2">
+        <ActivityCard
+          title="Getting started"
+          steps={[
+            {
+              done: (stores?.length ?? 0) > 0,
+              label: 'Add your first store',
+              href: '/dashboard/stores',
+            },
+            {
+              done: (medicines?.length ?? 0) > 0,
+              label: 'Add medicines',
+              href: '/dashboard/medicines',
+            },
+            {
+              done: (customers?.length ?? 0) > 0,
+              label: 'Add your first customer',
+              href: '/dashboard/customers',
+            },
+            { done: false, label: 'Invite a teammate (coming soon)', href: '#' },
+          ]}
+        />
+        <NextStepsCard />
+      </section>
+    </>
   );
 }
 
@@ -208,9 +111,7 @@ function StatCard({
         : 'text-zinc-700';
 
   return (
-    <div
-      className={`group rounded-2xl bg-white p-5 shadow-sm ring-1 ${ring} transition-all hover:shadow-md`}
-    >
+    <div className={`rounded-2xl bg-white p-5 shadow-sm ring-1 ${ring} transition-all hover:shadow-md`}>
       <div className={`text-xs font-medium uppercase tracking-wide ${accent}`}>{label}</div>
       <div className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900">{value}</div>
       {sub && <div className="mt-0.5 text-xs text-zinc-500">{sub}</div>}
@@ -218,39 +119,76 @@ function StatCard({
   );
 }
 
-function RoleBadge({ role }: { role: string }) {
+function ActivityCard({
+  title,
+  steps,
+}: {
+  title: string;
+  steps: { done: boolean; label: string; href: string }[];
+}) {
+  const completed = steps.filter((s) => s.done).length;
+  const pct = Math.round((completed / steps.length) * 100);
+
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white">
-      <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
-        <path
-          d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4Z"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinejoin="round"
+    <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-200">
+      <div className="flex items-end justify-between">
+        <h3 className="text-base font-semibold tracking-tight text-zinc-900">{title}</h3>
+        <span className="text-xs font-medium text-zinc-500">
+          {completed} / {steps.length}
+        </span>
+      </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-zinc-100">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all"
+          style={{ width: `${pct}%` }}
         />
-      </svg>
-      {cap(role.replace('_', ' '))}
-    </span>
+      </div>
+      <ul className="mt-5 space-y-2.5">
+        {steps.map((s) => (
+          <li key={s.label}>
+            <a
+              href={s.href}
+              className="group flex items-center gap-3 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-zinc-50"
+            >
+              {s.done ? (
+                <span className="grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-white">
+                  <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
+                    <path d="M5 12l5 5L20 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              ) : (
+                <span className="h-5 w-5 rounded-full border-2 border-zinc-300" />
+              )}
+              <span className={s.done ? 'text-zinc-500 line-through' : 'text-zinc-800 group-hover:text-zinc-900'}>
+                {s.label}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
-function EmptyStores() {
+function NextStepsCard() {
   return (
-    <div className="rounded-2xl border-2 border-dashed border-zinc-300 bg-white/50 p-12 text-center">
-      <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-50 text-emerald-600">
-        <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6">
-          <path
-            d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2h-4v-7H10v7H6a2 2 0 0 1-2-2V9Z"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
-      <h3 className="mt-4 text-base font-semibold text-zinc-900">No stores yet</h3>
-      <p className="mt-1 text-sm text-zinc-500">
-        Store creation lands in Phase 3. Hang tight — the foundation is in place.
+    <div className="rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 text-white shadow-sm">
+      <h3 className="text-base font-semibold tracking-tight">What&apos;s next</h3>
+      <p className="mt-1 text-sm text-zinc-300">
+        Phase 0 + early Phase 1 is live: auth, onboarding, stores, medicines, customers. Coming up:
+        purchases, sales (POS), reports, billing, and the offline-first desktop terminal.
       </p>
+      <div className="mt-5 grid grid-cols-2 gap-2 text-xs">
+        {['Suppliers', 'Doctors', 'Sales (POS)', 'Reports', 'Billing', 'Desktop app'].map((label) => (
+          <div
+            key={label}
+            className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5"
+          >
+            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className="text-zinc-200">{label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
