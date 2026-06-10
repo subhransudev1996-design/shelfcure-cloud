@@ -53,17 +53,25 @@ export default async function PurchaseDetailPage({ params }: PageProps) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <Link href="/dashboard/purchases" className="text-xs text-zinc-500 hover:text-zinc-800">
-          ← All purchases
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <Link href="/dashboard/purchases" className="text-xs text-zinc-500 hover:text-zinc-800">
+            ← All purchases
+          </Link>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900">
+            Bill <span className="font-mono text-emerald-700">{purchase.bill_number}</span>
+          </h1>
+          <p className="mt-1 text-sm text-zinc-600">
+            {fmtDate(purchase.bill_date)} · {purchase.store_name}
+            <span className="ml-1 font-mono text-xs text-zinc-500">· {purchase.store_code}</span>
+          </p>
+        </div>
+        <Link
+          href={`/dashboard/purchases/return?bill=${encodeURIComponent(purchase.bill_number)}`}
+          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700"
+        >
+          Process return
         </Link>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-900">
-          Bill <span className="font-mono text-emerald-700">{purchase.bill_number}</span>
-        </h1>
-        <p className="mt-1 text-sm text-zinc-600">
-          {fmtDate(purchase.bill_date)} · {purchase.store_name}
-          <span className="ml-1 font-mono text-xs text-zinc-500">· {purchase.store_code}</span>
-        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

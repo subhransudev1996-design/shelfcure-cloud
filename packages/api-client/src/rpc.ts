@@ -209,7 +209,6 @@ export interface CommitPurchaseReturnInput {
   store_id: string;
   purchase_id: string;
   supplier_id: string;
-  return_number: string;
   return_date?: string;
   subtotal?: number;
   gst_amount?: number;

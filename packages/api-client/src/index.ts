@@ -29,3 +29,4 @@ export * from './master-medicines';
 export * from './categories';
 export * from './barcodes';
 export * from './prescriptions';
+export * from './purchase-returns';

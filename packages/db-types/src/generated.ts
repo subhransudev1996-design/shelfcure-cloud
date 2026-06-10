@@ -3370,6 +3370,7 @@ export type Database = {
         }[]
       }
       rpc_dashboard_summary: { Args: { p_store_id?: string }; Returns: Json }
+      rpc_delete_purchase_return: { Args: { p_return_id: string }; Returns: undefined }
       rpc_expiring_batches: {
         Args: { p_days?: number; p_limit?: number; p_store_id: string }
         Returns: {
@@ -3405,6 +3406,14 @@ export type Database = {
       }
       rpc_get_purchase_detail: {
         Args: { p_purchase_id: string }
+        Returns: Json
+      }
+      rpc_get_purchase_for_return: {
+        Args: { p_bill_number: string; p_store_id: string }
+        Returns: Json
+      }
+      rpc_get_purchase_return_detail: {
+        Args: { p_return_id: string }
         Returns: Json
       }
       rpc_get_sale_detail: { Args: { p_sale_id: string }; Returns: Json }
@@ -3490,6 +3499,19 @@ export type Database = {
           qual: string
           roles: string[]
           with_check: string
+        }[]
+      }
+      rpc_list_purchase_returns: {
+        Args: { p_limit?: number; p_store_id: string }
+        Returns: {
+          bill_number: string
+          id: string
+          item_count: number
+          return_date: string
+          return_number: string
+          supplier_id: string
+          supplier_name: string
+          total_amount: number
         }[]
       }
       rpc_list_purchases: {
@@ -3829,6 +3851,7 @@ export type Database = {
       }
       rpc_update_my_profile: { Args: { p_payload: Json }; Returns: Json }
       rpc_update_org_settings: { Args: { p_payload: Json }; Returns: Json }
+      rpc_update_purchase_return: { Args: { p_payload: Json }; Returns: undefined }
       rpc_update_store_settings: {
         Args: { p_payload: Json; p_store_id: string }
         Returns: Json
