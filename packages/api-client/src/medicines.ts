@@ -4,7 +4,6 @@ import { mapSupabaseError } from './errors';
 
 type Client = SupabaseClient<Database>;
 type MedicineRow = Database['public']['Tables']['medicines']['Row'];
-type MedicineInsert = Database['public']['Tables']['medicines']['Insert'];
 type DosageFormRow = Database['public']['Tables']['dosage_forms']['Row'];
 
 export type Medicine = MedicineRow;
@@ -68,16 +67,16 @@ export interface CreateMedicineInput {
   minStockLevel?: number;
 }
 
+/**
+ * Create a medicine via the secure RPC (same pattern as createStore / createSupplier).
+ * The RPC enforces the role/org check in SQL and bypasses PostgREST RLS quirks
+ * that have bitten direct .from('table').insert() calls on multi-tenant tables.
+ */
 export async function createMedicine(
   client: Client,
   input: CreateMedicineInput,
 ): Promise<Medicine> {
-  const orgRow = await client.from('user_profiles').select('org_id').single();
-  if (orgRow.error || !orgRow.data?.org_id) {
-    throw mapSupabaseError(orgRow.error ?? new Error('no profile'));
-  }
-  const payload: MedicineInsert = {
-    org_id: orgRow.data.org_id,
+  const payload = {
     store_id: input.storeId,
     name: input.name.trim(),
     salt_composition: input.saltComposition?.trim() || null,
@@ -94,9 +93,19 @@ export async function createMedicine(
     reorder_level: input.reorderLevel ?? 20,
     min_stock_level: input.minStockLevel ?? 10,
   };
-  const { data, error } = await client.from('medicines').insert(payload).select('*').single();
+
+  const { data, error } = await client.rpc('rpc_create_medicine', { p_payload: payload as never });
   if (error) throw mapSupabaseError(error);
-  return data;
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.id) throw mapSupabaseError(new Error('rpc_create_medicine returned no row'));
+
+  // Read back the full row so callers get the same Medicine shape they expected before.
+  const fetched = await client.from('medicines').select('*').eq('id', row.id).single();
+  if (fetched.error || !fetched.data) {
+    throw mapSupabaseError(fetched.error ?? new Error('medicine created but read-back failed'));
+  }
+  return fetched.data;
 }
 
 export async function softDeleteMedicine(client: Client, id: string): Promise<void> {

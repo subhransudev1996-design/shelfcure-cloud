@@ -43,8 +43,8 @@ const NAV: NavItem[] = [
     ),
   },
   {
-    label: 'Medicines',
-    href: '/dashboard/medicines',
+    label: 'Inventory',
+    href: '/dashboard/inventory',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
         <path
@@ -52,6 +52,36 @@ const NAV: NavItem[] = [
           stroke="currentColor"
           strokeWidth="1.75"
           strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: 'Staff',
+    href: '/dashboard/staff',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path
+          d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2 M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M21 21v-2a4 4 0 0 0-3-3.87 M17 3.13a4 4 0 0 1 0 7.75"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: 'Doctors',
+    href: '/dashboard/doctors',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path
+          d="M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M5 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinejoin="round"
+          strokeLinecap="round"
         />
       </svg>
     ),
@@ -73,12 +103,101 @@ const NAV: NavItem[] = [
   },
 ];
 
-const FUTURE: NavItem[] = [
-  { label: 'Suppliers', href: '#', icon: <Dot /> },
-  { label: 'Doctors', href: '#', icon: <Dot /> },
-  { label: 'Sales', href: '#', icon: <Dot /> },
-  { label: 'Reports', href: '#', icon: <Dot /> },
-  { label: 'Settings', href: '#', icon: <Dot /> },
+const SALES: NavItem[] = [
+  {
+    label: 'New sale',
+    href: '/dashboard/sales/new',
+    badge: 'F2',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path
+          d="M5 7h14l-1.5 11a2 2 0 0 1-2 1.8H8.5a2 2 0 0 1-2-1.8L5 7Z M9 7V5a3 3 0 1 1 6 0v2"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: 'Sales history',
+    href: '/dashboard/sales',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+];
+
+const PURCHASES: NavItem[] = [
+  {
+    label: 'New purchase',
+    href: '/dashboard/purchases/new',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path
+          d="M3 7h13l3 4h2v7h-2a2 2 0 1 1-4 0H10a2 2 0 1 1-4 0H3V7Z"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    label: 'Purchase history',
+    href: '/dashboard/purchases',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Suppliers',
+    href: '/dashboard/suppliers',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path
+          d="M4 7h16v3a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-4 0V7Z M5 10v9h14v-9"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+];
+
+const FUTURE: NavItem[] = [];
+
+const INSIGHTS: NavItem[] = [
+  {
+    label: 'Reports',
+    href: '/dashboard/reports',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Settings',
+    href: '/dashboard/settings',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path
+          d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
 ];
 
 interface ShellProps {
@@ -114,11 +233,28 @@ export function DashboardShell({ user, org, children }: ShellProps) {
               <SidebarLink key={item.href} item={item} />
             ))}
           </SidebarSection>
-          <SidebarSection label="Coming soon">
-            {FUTURE.map((item) => (
-              <SidebarLink key={item.label} item={item} disabled />
+          <SidebarSection label="Sales">
+            {SALES.map((item) => (
+              <SidebarLink key={item.href} item={item} />
             ))}
           </SidebarSection>
+          <SidebarSection label="Purchases">
+            {PURCHASES.map((item) => (
+              <SidebarLink key={item.href} item={item} />
+            ))}
+          </SidebarSection>
+          <SidebarSection label="Insights">
+            {INSIGHTS.map((item) => (
+              <SidebarLink key={item.href} item={item} />
+            ))}
+          </SidebarSection>
+          {FUTURE.length > 0 && (
+            <SidebarSection label="Coming soon">
+              {FUTURE.map((item) => (
+                <SidebarLink key={item.label} item={item} disabled />
+              ))}
+            </SidebarSection>
+          )}
         </nav>
 
         <div className="border-t border-zinc-100 px-3 py-3">
@@ -222,9 +358,8 @@ function MobileNavLink({ item }: { item: NavItem }) {
   );
 }
 
-function Dot() {
-  return <span className="inline-block h-1.5 w-1.5 rounded-full bg-zinc-300" />;
-}
+// Dot placeholder removed — every nav entry now has a real icon and there are
+// no "coming soon" rows left to render.
 
 function getInitials(name: string) {
   return (

@@ -15,6 +15,7 @@
     "@shelfcure/api-client": "workspace:*",
     "@shelfcure/core": "workspace:*",
     "@shelfcure/db-types": "workspace:*",
+    "@shelfcure/hotkeys": "workspace:*",
     "@shelfcure/ui": "workspace:*",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",

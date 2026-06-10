@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -398,7 +398,7 @@ export type Database = {
       }
       batches: {
         Row: {
-          barcode: string | null
+          batch_barcode: string | null
           batch_number: string
           challan_id: string | null
           created_at: string
@@ -422,7 +422,7 @@ export type Database = {
           version: number
         }
         Insert: {
-          barcode?: string | null
+          batch_barcode?: string | null
           batch_number: string
           challan_id?: string | null
           created_at?: string
@@ -446,7 +446,7 @@ export type Database = {
           version?: number
         }
         Update: {
-          barcode?: string | null
+          batch_barcode?: string | null
           batch_number?: string
           challan_id?: string | null
           created_at?: string
@@ -517,6 +517,35 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bill_counters: {
+        Row: {
+          last_value: number
+          scope: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          last_value?: number
+          scope: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          last_value?: number
+          scope?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_counters_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -1165,6 +1194,57 @@ export type Database = {
           },
         ]
       }
+      master_medicines: {
+        Row: {
+          barcode: string | null
+          created_at: string
+          default_gst_rate: number | null
+          dosage_form: string | null
+          hsn_code: string | null
+          id: string
+          manufacturer: string | null
+          name: string
+          pack_size: number | null
+          pack_unit: string | null
+          salt_composition: string | null
+          strength: string | null
+          units_per_pack: number | null
+          updated_at: string
+        }
+        Insert: {
+          barcode?: string | null
+          created_at?: string
+          default_gst_rate?: number | null
+          dosage_form?: string | null
+          hsn_code?: string | null
+          id?: string
+          manufacturer?: string | null
+          name: string
+          pack_size?: number | null
+          pack_unit?: string | null
+          salt_composition?: string | null
+          strength?: string | null
+          units_per_pack?: number | null
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string | null
+          created_at?: string
+          default_gst_rate?: number | null
+          dosage_form?: string | null
+          hsn_code?: string | null
+          id?: string
+          manufacturer?: string | null
+          name?: string
+          pack_size?: number | null
+          pack_unit?: string | null
+          salt_composition?: string | null
+          strength?: string | null
+          units_per_pack?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       medicine_categories: {
         Row: {
           created_at: string
@@ -1472,6 +1552,93 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      pos_hotkey_group_items: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          medicine_id: string
+          quantity: number
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          medicine_id: string
+          quantity?: number
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          medicine_id?: string
+          quantity?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_hotkey_group_items_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "pos_hotkey_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_hotkey_group_items_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "medicines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_hotkey_groups: {
+        Row: {
+          created_at: string
+          digit: number
+          id: string
+          name: string | null
+          org_id: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          digit: number
+          id?: string
+          name?: string | null
+          org_id: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          digit?: number
+          id?: string
+          name?: string | null
+          org_id?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_hotkey_groups_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_hotkey_groups_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchase_items: {
         Row: {
@@ -2862,6 +3029,7 @@ export type Database = {
           pincode: string
           state: string
           updated_at: string
+          upi_vpa: string | null
         }
         Insert: {
           address?: string
@@ -2883,6 +3051,7 @@ export type Database = {
           pincode?: string
           state?: string
           updated_at?: string
+          upi_vpa?: string | null
         }
         Update: {
           address?: string
@@ -2904,6 +3073,7 @@ export type Database = {
           pincode?: string
           state?: string
           updated_at?: string
+          upi_vpa?: string | null
         }
         Relationships: [
           {
@@ -3098,6 +3268,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      rpc_add_batch_manual: {
+        Args: { p_medicine_id: string; p_payload: Json; p_store_id: string }
+        Returns: Json
+      }
       rpc_commit_purchase: {
         Args: { p_payload: Json }
         Returns: {
@@ -3126,6 +3300,48 @@ export type Database = {
           return_number: string
         }[]
       }
+      rpc_create_category: {
+        Args: { p_name: string; p_store_id?: string }
+        Returns: {
+          id: string
+          is_system: boolean
+          name: string
+          store_id: string
+        }[]
+      }
+      rpc_create_customer: {
+        Args: { p_payload: Json }
+        Returns: {
+          customer_type: string
+          email: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string
+        }[]
+      }
+      rpc_create_doctor: {
+        Args: { p_payload: Json }
+        Returns: {
+          clinic_name: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string
+          specialization: string
+        }[]
+      }
+      rpc_create_medicine: {
+        Args: { p_payload: Json }
+        Returns: {
+          default_gst_rate: number
+          id: string
+          manufacturer: string
+          name: string
+          pack_size: number
+          pack_unit: string
+        }[]
+      }
       rpc_create_org_with_owner: {
         Args: { p_full_name: string; p_org_name: string; p_phone?: string }
         Returns: {
@@ -3141,6 +3357,130 @@ export type Database = {
           name: string
         }[]
       }
+      rpc_create_supplier: {
+        Args: { p_payload: Json }
+        Returns: {
+          city: string
+          gstin: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string
+          state: string
+        }[]
+      }
+      rpc_dashboard_summary: { Args: { p_store_id?: string }; Returns: Json }
+      rpc_expiring_batches: {
+        Args: { p_days?: number; p_limit?: number; p_store_id: string }
+        Returns: {
+          batch_id: string
+          batch_number: string
+          days_left: number
+          expiry_date: string
+          medicine_id: string
+          medicine_name: string
+          on_hand: number
+        }[]
+      }
+      rpc_finalize_staff_profile: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_phone?: string
+          p_role: string
+          p_store_id?: string
+          p_user_id: string
+        }
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+          role: string
+          store_id: string
+        }[]
+      }
+      rpc_get_medicine_detail: {
+        Args: { p_medicine_id: string; p_store_id: string }
+        Returns: Json
+      }
+      rpc_get_purchase_detail: {
+        Args: { p_purchase_id: string }
+        Returns: Json
+      }
+      rpc_get_sale_detail: { Args: { p_sale_id: string }; Returns: Json }
+      rpc_list_batches_for_barcodes: {
+        Args: { p_medicine_id?: string; p_store_id: string }
+        Returns: {
+          batch_barcode: string
+          batch_id: string
+          batch_number: string
+          current_qty: number
+          expiry_date: string
+          gst_percentage: number
+          manufacturer: string
+          medicine_id: string
+          medicine_name: string
+          mrp: number
+        }[]
+      }
+      rpc_list_categories: {
+        Args: { p_store_id?: string }
+        Returns: {
+          id: string
+          is_system: boolean
+          name: string
+          store_id: string
+        }[]
+      }
+      rpc_list_doctors: {
+        Args: { p_store_id?: string }
+        Returns: {
+          clinic_name: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string
+          specialization: string
+        }[]
+      }
+      rpc_list_medicines_with_stock: {
+        Args: {
+          p_limit?: number
+          p_page?: number
+          p_query?: string
+          p_store_id: string
+        }
+        Returns: {
+          active_batch_count: number
+          category_id: string
+          category_name: string
+          created_at: string
+          default_gst_rate: number
+          dosage_form_id: string
+          dosage_form_name: string
+          focus_label: string
+          hsn_code: string
+          id: string
+          is_focused: boolean
+          manufacturer: string
+          min_stock_level: number
+          mrp: number
+          name: string
+          near_expiry_count: number
+          pack_size: number
+          pack_unit: string
+          purchase_rate: number
+          rack_location: string
+          reorder_level: number
+          sale_unit_mode: string
+          salt_composition: string
+          selling_price: number
+          strength: string
+          total_count: number
+          total_stock: number
+          units_per_pack: number
+        }[]
+      }
       rpc_list_policies: {
         Args: { p_table: string }
         Returns: {
@@ -3151,6 +3491,305 @@ export type Database = {
           roles: string[]
           with_check: string
         }[]
+      }
+      rpc_list_purchases: {
+        Args: {
+          p_from?: string
+          p_limit?: number
+          p_offset?: number
+          p_store_id: string
+          p_to?: string
+        }
+        Returns: {
+          bill_date: string
+          bill_number: string
+          created_at: string
+          id: string
+          payment_status: string
+          supplier_id: string
+          supplier_name: string
+          total_amount: number
+        }[]
+      }
+      rpc_list_sales: {
+        Args: {
+          p_from?: string
+          p_limit?: number
+          p_offset?: number
+          p_store_id: string
+          p_to?: string
+        }
+        Returns: {
+          bill_date: string
+          bill_number: string
+          created_at: string
+          created_by_name: string
+          customer_id: string
+          customer_name: string
+          id: string
+          is_returned: boolean
+          payment_method: string
+          payment_status: string
+          total_amount: number
+        }[]
+      }
+      rpc_list_staff: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          last_login_at: string
+          phone: string
+          role: string
+          store_code: string
+          store_id: string
+          store_name: string
+        }[]
+      }
+      rpc_list_stock_batches: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_store_id: string
+        }
+        Returns: {
+          batch_id: string
+          batch_number: string
+          days_to_expiry: number
+          expiry_date: string
+          gst_percentage: number
+          is_blocked: boolean
+          manufacturer: string
+          medicine_id: string
+          medicine_name: string
+          mrp: number
+          on_hand: number
+          purchase_rate: number
+        }[]
+      }
+      rpc_list_suppliers: {
+        Args: { p_store_id?: string }
+        Returns: {
+          city: string
+          gstin: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string
+          state: string
+        }[]
+      }
+      rpc_low_stock_alerts: {
+        Args: { p_limit?: number; p_store_id: string }
+        Returns: {
+          manufacturer: string
+          medicine_id: string
+          min_level: number
+          name: string
+          on_hand: number
+        }[]
+      }
+      rpc_master_medicine_search: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          barcode: string | null
+          created_at: string
+          default_gst_rate: number | null
+          dosage_form: string | null
+          hsn_code: string | null
+          id: string
+          manufacturer: string | null
+          name: string
+          pack_size: number | null
+          pack_unit: string | null
+          salt_composition: string | null
+          strength: string | null
+          units_per_pack: number | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "master_medicines"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      rpc_pos_add_hotkey_medicine: {
+        Args: {
+          p_digit: number
+          p_medicine_id: string
+          p_quantity?: number
+          p_store_id: string
+        }
+        Returns: undefined
+      }
+      rpc_pos_clear_hotkey_group: {
+        Args: { p_digit: number; p_store_id: string }
+        Returns: undefined
+      }
+      rpc_pos_get_customer: {
+        Args: { p_customer_id: string }
+        Returns: {
+          customer_type: string
+          email: string
+          gstin: string
+          id: string
+          name: string
+          outstanding: number
+          phone: string
+          special_discount_label: string
+          special_discount_type: string
+          special_discount_value: number
+          state: string
+        }[]
+      }
+      rpc_pos_get_hotkey_groups: { Args: { p_store_id: string }; Returns: Json }
+      rpc_pos_get_store_context: {
+        Args: { p_store_id: string }
+        Returns: {
+          org_gstin: string
+          org_name: string
+          store_code: string
+          store_id: string
+          store_name: string
+          store_state: string
+        }[]
+      }
+      rpc_pos_list_batches_for_medicine: {
+        Args: { p_medicine_id: string; p_store_id: string }
+        Returns: {
+          batch_id: string
+          batch_number: string
+          current_quantity: number
+          days_to_expiry: number
+          expiry_date: string
+          gst_percentage: number
+          mrp: number
+          purchase_rate: number
+          selling_price: number
+          supplier_name: string
+        }[]
+      }
+      rpc_pos_next_bill_number: {
+        Args: { p_prefix?: string; p_store_id: string }
+        Returns: string
+      }
+      rpc_pos_quick_access: {
+        Args: {
+          p_customer_id?: string
+          p_limit_per?: number
+          p_store_id: string
+        }
+        Returns: Json
+      }
+      rpc_pos_recent_bill_items: {
+        Args: { p_customer_id: string; p_store_id: string }
+        Returns: {
+          batch_id: string
+          batch_number: string
+          current_quantity: number
+          default_gst_rate: number
+          expiry_date: string
+          gst_percentage: number
+          hsn_code: string
+          manufacturer: string
+          medicine_id: string
+          mrp: number
+          name: string
+          original_qty: number
+          pack_size: number
+          pack_unit: string
+          purchase_rate: number
+          selling_price: number
+        }[]
+      }
+      rpc_pos_remove_hotkey_medicine: {
+        Args: { p_digit: number; p_medicine_id: string; p_store_id: string }
+        Returns: undefined
+      }
+      rpc_pos_search_customers: {
+        Args: { p_limit?: number; p_query: string; p_store_id: string }
+        Returns: {
+          customer_type: string
+          email: string
+          gstin: string
+          id: string
+          name: string
+          outstanding: number
+          phone: string
+          special_discount_label: string
+          special_discount_type: string
+          special_discount_value: number
+          state: string
+        }[]
+      }
+      rpc_pos_search_medicines: {
+        Args: { p_limit?: number; p_query: string; p_store_id: string }
+        Returns: {
+          batch_id: string
+          batch_number: string
+          current_quantity: number
+          default_gst_rate: number
+          expiry_date: string
+          gst_percentage: number
+          hsn_code: string
+          manufacturer: string
+          medicine_id: string
+          mrp: number
+          name: string
+          pack_size: number
+          pack_unit: string
+          purchase_rate: number
+          selling_price: number
+        }[]
+      }
+      rpc_pos_set_hotkey_name: {
+        Args: { p_digit: number; p_name: string; p_store_id: string }
+        Returns: undefined
+      }
+      rpc_pos_toggle_favourite: {
+        Args: { p_medicine_id: string; p_value: boolean }
+        Returns: boolean
+      }
+      rpc_report_gst_summary: {
+        Args: { p_from?: string; p_store_id: string; p_to?: string }
+        Returns: {
+          cgst_amount: number
+          gst_rate: number
+          igst_amount: number
+          line_count: number
+          sgst_amount: number
+          taxable_amount: number
+          total_amount: number
+        }[]
+      }
+      rpc_report_sales_trend: {
+        Args: { p_days?: number; p_store_id: string }
+        Returns: {
+          bill_count: number
+          day: string
+          gst_amount: number
+          total_amount: number
+        }[]
+      }
+      rpc_report_top_medicines: {
+        Args: { p_days?: number; p_limit?: number; p_store_id: string }
+        Returns: {
+          bills: number
+          manufacturer: string
+          medicine_id: string
+          name: string
+          qty_sold: number
+          revenue: number
+        }[]
+      }
+      rpc_save_batch_barcodes: {
+        Args: { p_batch_ids: string[] }
+        Returns: Json
       }
       rpc_stock_correction: {
         Args: {
@@ -3175,6 +3814,28 @@ export type Database = {
           transfer_id: string
           transfer_no: string
         }[]
+      }
+      rpc_toggle_focused: {
+        Args: { p_is_focused: boolean; p_label?: string; p_medicine_id: string }
+        Returns: Json
+      }
+      rpc_update_batch: {
+        Args: { p_batch_id: string; p_payload: Json }
+        Returns: Json
+      }
+      rpc_update_medicine: {
+        Args: { p_medicine_id: string; p_payload: Json }
+        Returns: Json
+      }
+      rpc_update_my_profile: { Args: { p_payload: Json }; Returns: Json }
+      rpc_update_org_settings: { Args: { p_payload: Json }; Returns: Json }
+      rpc_update_store_settings: {
+        Args: { p_payload: Json; p_store_id: string }
+        Returns: Json
+      }
+      rpc_update_store_upi: {
+        Args: { p_store_id: string; p_vpa: string }
+        Returns: string
       }
       rpc_whoami: { Args: never; Returns: Json }
       user_has_store_access: {

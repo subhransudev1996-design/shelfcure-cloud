@@ -1,14 +1,26 @@
 /**
  * Bill math: turn an array of line items into a fully-totalled bill.
  *
+ * Three discount layers (matches Marg / desktop POS):
+ *   • Medicine discount   — per cart row (already baked into each line's gross)
+ *   • Bill discount       — manual, whole-bill, capped at medicineSubtotal
+ *   • Special discount    — per-customer, read-only on POS, stacks on top
+ *                            of the bill discount; capped at remaining medSub
+ *
  * Sale flow:
- *   1) Each line has MRP × qty − line discount  →  gross
+ *   1) Each line: MRP × qty − line discount  →  gross
  *   2) GST extracted from gross (MRP-inclusive)
- *   3) Bill-level discount applied to net (after GST)
- *   4) Special discount (per-customer) applied
- *   5) Misc charge added
- *   6) Round-off to nearest rupee
- *   7) total_amount = payable
+ *   3) medicineSubtotal = sum of non-misc lines
+ *   4) Bill discount applied to medicineSubtotal
+ *   5) Special discount applied to (medicineSubtotal − billDiscount)
+ *   6) Misc charges added on top (no GST)
+ *   7) Round-off to nearest rupee
+ *   8) total_amount = payable
+ *
+ * Callers that need percentage-cap semantics pass amounts directly via
+ * `billDiscountAmount` / `specialDiscountAmount`; legacy
+ * `billDiscountPercentage` / `billDiscountFlat` are kept for non-POS uses
+ * (they apply to subtotal-of-all-lines, including misc).
  */
 
 import { round2, roundOff as calcRoundOff } from './math';
@@ -34,11 +46,13 @@ export interface BillLineOutput extends GstLineItem {
 export interface BillSummaryInput {
   lines: BillLineInput[];
   gstType: GstType;
+  /** Caller-computed bill discount (₹). Takes precedence over pct/flat. */
+  billDiscountAmount?: number;
   /** Bill-level percentage discount applied AFTER lines are summed. */
   billDiscountPercentage?: number;
   /** Or flat ₹ bill-level discount. */
   billDiscountFlat?: number;
-  /** Per-customer special discount (label printed). */
+  /** Per-customer special discount (label printed). Caller-computed. */
   specialDiscountAmount?: number;
   /** Misc charge added on top (delivery, packing, etc.). */
   miscCharge?: number;
@@ -49,6 +63,8 @@ export interface BillSummaryInput {
 export interface BillSummaryOutput {
   lines: BillLineOutput[];
   subtotal: number;
+  /** Subtotal of non-misc lines only (basis for bill / special discount %). */
+  medicineSubtotal: number;
   taxableAmount: number;
   cgstAmount: number;
   sgstAmount: number;
@@ -98,17 +114,21 @@ export function computeBill(input: BillSummaryInput): BillSummaryOutput {
   const lines = input.lines.map((l) => computeLine(l, input.gstType));
 
   const subtotal = round2(lines.reduce((s, l) => s + l.grossAmount, 0));
+  const medicineSubtotal = round2(
+    input.lines.reduce((s, raw, i) => s + (raw.isMiscItem ? 0 : lines[i]!.grossAmount), 0),
+  );
   const taxableAmount = round2(lines.reduce((s, l) => s + l.taxableAmount, 0));
   const cgstAmount = round2(lines.reduce((s, l) => s + l.cgstAmount, 0));
   const sgstAmount = round2(lines.reduce((s, l) => s + l.sgstAmount, 0));
   const igstAmount = round2(lines.reduce((s, l) => s + l.igstAmount, 0));
   const gstAmount = round2(cgstAmount + sgstAmount + igstAmount);
 
-  // Bill-level discount on the gross total
   const billDiscount = round2(
-    input.billDiscountPercentage != null
-      ? subtotal * (input.billDiscountPercentage / 100)
-      : (input.billDiscountFlat ?? 0),
+    input.billDiscountAmount != null
+      ? input.billDiscountAmount
+      : input.billDiscountPercentage != null
+        ? subtotal * (input.billDiscountPercentage / 100)
+        : (input.billDiscountFlat ?? 0),
   );
   const specialDiscount = round2(input.specialDiscountAmount ?? 0);
   const miscCharge = round2(input.miscCharge ?? 0);
@@ -121,6 +141,7 @@ export function computeBill(input: BillSummaryInput): BillSummaryOutput {
   return {
     lines,
     subtotal,
+    medicineSubtotal,
     taxableAmount,
     cgstAmount,
     sgstAmount,
