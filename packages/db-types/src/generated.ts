@@ -3349,6 +3349,10 @@ export type Database = {
           profile_id: string
         }[]
       }
+      rpc_create_purchase_order: {
+        Args: { p_payload: Json }
+        Returns: string
+      }
       rpc_create_store: {
         Args: { p_payload: Json }
         Returns: {
@@ -3410,6 +3414,10 @@ export type Database = {
       }
       rpc_get_purchase_for_return: {
         Args: { p_bill_number: string; p_store_id: string }
+        Returns: Json
+      }
+      rpc_get_purchase_order: {
+        Args: { p_po_id: string }
         Returns: Json
       }
       rpc_get_purchase_return_detail: {
@@ -3499,6 +3507,19 @@ export type Database = {
           qual: string
           roles: string[]
           with_check: string
+        }[]
+      }
+      rpc_list_purchase_orders: {
+        Args: { p_status?: string; p_store_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          linked_purchase_id: string | null
+          order_date: string
+          status: string
+          supplier_id: string
+          supplier_name: string
+          total_items: number
         }[]
       }
       rpc_list_purchase_returns: {
@@ -3614,6 +3635,10 @@ export type Database = {
           name: string
           on_hand: number
         }[]
+      }
+      rpc_mark_purchase_order_fulfilled: {
+        Args: { p_po_id: string; p_purchase_id: string }
+        Returns: undefined
       }
       rpc_master_medicine_search: {
         Args: { p_limit?: number; p_query: string }

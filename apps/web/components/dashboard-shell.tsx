@@ -157,6 +157,15 @@ const PURCHASES: NavItem[] = [
     ),
   },
   {
+    label: 'Pending reorders',
+    href: '/dashboard/purchases/orders',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     label: 'Suppliers',
     href: '/dashboard/suppliers',
     icon: (

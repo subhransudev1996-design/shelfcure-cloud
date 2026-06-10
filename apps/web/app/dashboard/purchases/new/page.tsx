@@ -1,8 +1,14 @@
 import Link from 'next/link';
+import { getPurchaseOrder } from '@shelfcure/api-client';
 import { getSupabaseServerClient } from '../../../../lib/supabase/server';
 import { PurchaseClient } from './purchase-client';
 
-export default async function NewPurchasePage() {
+export default async function NewPurchasePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ poId?: string }>;
+}) {
+  const { poId } = await searchParams;
   const supabase = await getSupabaseServerClient();
 
   const { data: profile } = await supabase
@@ -41,6 +47,8 @@ export default async function NewPurchasePage() {
     supabase.rpc('rpc_list_suppliers', { p_store_id: activeStoreId }),
   ]);
 
+  const purchaseOrder = poId ? await getPurchaseOrder(supabase, poId) : null;
+
   return (
     <PurchaseClient
       storeId={activeStoreId}
@@ -55,6 +63,7 @@ export default async function NewPurchasePage() {
         gstin: string | null;
         is_active: boolean;
       }>}
+      purchaseOrder={purchaseOrder}
     />
   );
 }

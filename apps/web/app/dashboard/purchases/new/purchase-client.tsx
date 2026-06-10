@@ -20,9 +20,11 @@ import { useRouter } from 'next/navigation';
 import {
   posSearchMedicines,
   rpcCommitPurchase,
+  markPurchaseOrderFulfilled,
   type PurchaseLineItem,
   type Supplier,
   type PosSearchResult,
+  type PurchaseOrderDetail,
   DomainError,
 } from '@shelfcure/api-client';
 import { computeBill, type BillLineInput } from '@shelfcure/core';
@@ -36,6 +38,7 @@ interface Props {
   storeName: string;
   storeCode: string;
   initialSuppliers: Supplier[];
+  purchaseOrder?: PurchaseOrderDetail | null;
 }
 
 interface PurchaseLine {
@@ -65,16 +68,30 @@ function defaultExpiry() {
   return d.toISOString().slice(0, 10);
 }
 
-export function PurchaseClient({ storeId, storeName, storeCode, initialSuppliers }: Props) {
+export function PurchaseClient({ storeId, storeName, storeCode, initialSuppliers, purchaseOrder }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   const [suppliers] = useState<Supplier[]>(initialSuppliers);
-  const [supplierId, setSupplierId] = useState<string>(initialSuppliers[0]?.id ?? '');
+  const [supplierId, setSupplierId] = useState<string>(
+    purchaseOrder?.order.supplier_id ?? initialSuppliers[0]?.id ?? '',
+  );
   const [billNumber, setBillNumber] = useState('');
   const [billDate, setBillDate] = useState(todayISO());
 
-  const [lines, setLines] = useState<PurchaseLine[]>([]);
+  const [lines, setLines] = useState<PurchaseLine[]>(() =>
+    (purchaseOrder?.items ?? []).map((item) => ({
+      key: newKey(),
+      medicine_id: item.medicine_id,
+      medicine_name: item.medicine_name,
+      batch_number: '',
+      expiry_date: defaultExpiry(),
+      quantity: item.requested_quantity,
+      purchase_rate: 0,
+      mrp: 0,
+      gst_percentage: 12,
+    })),
+  );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
@@ -217,6 +234,10 @@ export function PurchaseClient({ storeId, storeName, storeCode, initialSuppliers
         items,
       });
 
+      if (purchaseOrder) {
+        await markPurchaseOrderFulfilled(supabase, purchaseOrder.order.id, result.purchaseId);
+      }
+
       setLastSaved(result.billNumber);
       clearForm();
       router.refresh();
@@ -274,6 +295,13 @@ export function PurchaseClient({ storeId, storeName, storeCode, initialSuppliers
           <Hint k="F9">Save</Hint>
         </div>
       </div>
+
+      {purchaseOrder && (
+        <Alert variant="info">
+          Converting reorder PO-{purchaseOrder.order.id.slice(0, 8).toUpperCase()} from{' '}
+          {purchaseOrder.order.supplier_name} — fill in batch, expiry, rate &amp; MRP for each line, then save.
+        </Alert>
+      )}
 
       {lastSaved && (
         <Alert variant="success">
