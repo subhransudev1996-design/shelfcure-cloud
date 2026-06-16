@@ -3842,7 +3842,9 @@ export type Database = {
           pack_size: number
           pack_unit: string
           purchase_rate: number
+          sale_unit_mode: string
           selling_price: number
+          units_per_pack: number | null
         }[]
       }
       rpc_pos_set_hotkey_name: {

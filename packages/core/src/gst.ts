@@ -187,6 +187,27 @@ export function calculateLineGst(
   };
 }
 
+/**
+ * Rate-drift guard for purchase entry.
+ *
+ * Compares a new purchase_rate against the last known rate for the same
+ * medicine/supplier and returns a severity level:
+ *   ok      < 10 % change
+ *   warn    ≥ 10 %  (highlight in UI)
+ *   danger  ≥ 25 %  (strong warning)
+ *   block   ≥ 50 %  (require confirmation before saving)
+ */
+export type RateDriftLevel = 'ok' | 'warn' | 'danger' | 'block';
+
+export function evaluateRateDrift(rate: number, lastRate: number): RateDriftLevel {
+  if (!lastRate || lastRate <= 0 || !rate || rate <= 0) return 'ok';
+  const pct = (Math.abs(rate - lastRate) / lastRate) * 100;
+  if (pct >= 50) return 'block';
+  if (pct >= 25) return 'danger';
+  if (pct >= 10) return 'warn';
+  return 'ok';
+}
+
 export function sumGstLines(items: GstLineItem[]): GstSummary {
   return items.reduce<GstSummary>(
     (acc, line) => ({

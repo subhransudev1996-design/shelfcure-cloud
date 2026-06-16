@@ -20,6 +20,8 @@ export interface PosSearchResult {
   purchase_rate: number | null;
   gst_percentage: number;
   current_quantity: number;
+  sale_unit_mode: 'pack_only' | 'both' | 'individual';
+  units_per_pack: number | null;
 }
 
 export async function posSearchMedicines(

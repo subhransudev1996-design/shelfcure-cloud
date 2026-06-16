@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getPurchaseOrder } from '@shelfcure/api-client';
 import { getSupabaseServerClient } from '../../../../lib/supabase/server';
+import { resolveActiveStoreId } from '../../../../lib/active-store';
 import { PurchaseClient } from './purchase-client';
 
 export default async function NewPurchasePage({
@@ -10,22 +11,7 @@ export default async function NewPurchasePage({
 }) {
   const { poId } = await searchParams;
   const supabase = await getSupabaseServerClient();
-
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('role, store_id')
-    .single();
-
-  let activeStoreId = profile?.store_id ?? null;
-  if (!activeStoreId) {
-    const { data: stores } = await supabase
-      .from('stores')
-      .select('id')
-      .eq('is_active', true)
-      .order('code', { ascending: true })
-      .limit(1);
-    activeStoreId = stores?.[0]?.id ?? null;
-  }
+  const activeStoreId = await resolveActiveStoreId(supabase);
 
   if (!activeStoreId) {
     return (
@@ -54,6 +40,8 @@ export default async function NewPurchasePage({
       storeId={activeStoreId}
       storeName={storeRow?.store_name ?? 'Store'}
       storeCode={storeRow?.store_code ?? ''}
+      storeState={storeRow?.store_state ?? null}
+      storeGstin={storeRow?.org_gstin ?? null}
       initialSuppliers={(suppliers ?? []) as Array<{
         id: string;
         name: string;
