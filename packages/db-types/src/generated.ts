@@ -3385,7 +3385,31 @@ export type Database = {
           state: string
         }[]
       }
+      rpc_dashboard_chart_data: {
+        Args: { p_store_id: string; p_days?: number }
+        Returns: { day: string; sales: number; purchases: number; returns: number }[]
+      }
+      rpc_dashboard_stats: { Args: { p_store_id: string }; Returns: Json }
       rpc_dashboard_summary: { Args: { p_store_id?: string }; Returns: Json }
+      rpc_upcoming_refills: {
+        Args: { p_store_id: string; p_days?: number }
+        Returns: {
+          customer_id: string
+          customer_name: string
+          customer_phone: string
+          medicine_id: string
+          medicine_name: string
+          sale_unit_mode: string
+          units_per_pack: number | null
+          interval_days: number | null
+          remind_days_before: number
+          last_dispensed_date: string | null
+          next_due_date: string | null
+          days_until_due: number | null
+          total_stock: number
+          min_stock_level: number
+        }[]
+      }
       rpc_delete_customer_routine: { Args: { p_id: string }; Returns: undefined }
       rpc_delete_purchase_return: { Args: { p_return_id: string }; Returns: undefined }
       rpc_get_customer_detail: {

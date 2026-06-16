@@ -157,6 +157,84 @@ export async function getLowStockAlerts(client: Client, storeId: string, limit =
   return (data ?? []) as unknown as LowStockRow[];
 }
 
+// ─── Full dashboard stats (§2.1) ─────────────────────────────────────────────
+
+export interface DashboardStats {
+  today_sale_count: number;
+  today_sales: number;
+  today_gst_collected: number;
+  today_purchases: number;
+  today_returns: number;
+  today_profit: number;
+  month_sale_count: number;
+  monthly_sales: number;
+  monthly_returns: number;
+  monthly_profit: number;
+  total_medicines: number;
+  total_stock_value: number;
+  low_stock_count: number;
+  expiry_soon_count: number;
+  expired_count: number;
+  outstanding_credit: number;
+  store_count: number;
+}
+
+export async function getDashboardStats(client: Client, storeId: string): Promise<DashboardStats> {
+  const { data, error } = await client.rpc('rpc_dashboard_stats', { p_store_id: storeId });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as DashboardStats;
+}
+
+export interface ChartDataPoint {
+  day: string;
+  sales: number;
+  purchases: number;
+  returns: number;
+}
+
+export async function getDashboardChartData(
+  client: Client,
+  storeId: string,
+  days = 14,
+): Promise<ChartDataPoint[]> {
+  const { data, error } = await client.rpc('rpc_dashboard_chart_data', {
+    p_store_id: storeId,
+    p_days: days,
+  });
+  if (error) throw mapSupabaseError(error);
+  return (data ?? []) as unknown as ChartDataPoint[];
+}
+
+export interface UpcomingRefillRow {
+  customer_id: string;
+  customer_name: string;
+  customer_phone: string;
+  medicine_id: string;
+  medicine_name: string;
+  sale_unit_mode: string;
+  units_per_pack: number | null;
+  interval_days: number | null;
+  remind_days_before: number;
+  last_dispensed_date: string | null;
+  next_due_date: string | null;
+  days_until_due: number | null;
+  total_stock: number;
+  min_stock_level: number;
+}
+
+export async function getUpcomingRefills(
+  client: Client,
+  storeId: string,
+  days = 7,
+): Promise<UpcomingRefillRow[]> {
+  const { data, error } = await client.rpc('rpc_upcoming_refills', {
+    p_store_id: storeId,
+    p_days: days,
+  });
+  if (error) throw mapSupabaseError(error);
+  return (data ?? []) as unknown as UpcomingRefillRow[];
+}
+
 export interface ExpiringBatchRow {
   batch_id: string;
   medicine_id: string;
