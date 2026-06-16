@@ -3272,6 +3272,10 @@ export type Database = {
         Args: { p_medicine_id: string; p_payload: Json; p_store_id: string }
         Returns: Json
       }
+      rpc_check_duplicate_bill: {
+        Args: { p_bill_number: string; p_store_id: string; p_supplier_id: string }
+        Returns: boolean
+      }
       rpc_commit_purchase: {
         Args: { p_payload: Json }
         Returns: {
@@ -3411,6 +3415,14 @@ export type Database = {
       rpc_get_purchase_detail: {
         Args: { p_purchase_id: string }
         Returns: Json
+      }
+      rpc_get_recent_purchase_rates: {
+        Args: { p_limit?: number; p_medicine_id: string; p_store_id: string }
+        Returns: {
+          bill_date: string
+          rate: number
+          supplier_name: string
+        }[]
       }
       rpc_get_purchase_for_return: {
         Args: { p_bill_number: string; p_store_id: string }

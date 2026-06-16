@@ -31,3 +31,4 @@ export * from './barcodes';
 export * from './prescriptions';
 export * from './purchase-returns';
 export * from './purchase-orders';
+export * from './purchases';

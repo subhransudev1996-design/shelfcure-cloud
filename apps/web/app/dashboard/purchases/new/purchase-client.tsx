@@ -21,6 +21,7 @@ import {
   posSearchMedicines,
   rpcCommitPurchase,
   markPurchaseOrderFulfilled,
+  checkDuplicateBill,
   type PurchaseLineItem,
   type Supplier,
   type PosSearchResult,
@@ -95,6 +96,7 @@ export function PurchaseClient({ storeId, storeName, storeCode, initialSuppliers
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [billDuplicate, setBillDuplicate] = useState(false);
 
   // Per-line medicine search state
   const [searchKey, setSearchKey] = useState<string | null>(null); // line key currently searching
@@ -123,6 +125,20 @@ export function PurchaseClient({ storeId, storeName, storeCode, initialSuppliers
     }, 180);
     return () => clearTimeout(t);
   }, [searchKey, searchQuery, storeId, supabase]);
+
+  // Duplicate bill detection — debounced, fires when billNumber or supplier changes
+  useEffect(() => {
+    if (!billNumber.trim() || !supplierId) { setBillDuplicate(false); return; }
+    const t = setTimeout(async () => {
+      try {
+        const isDup = await checkDuplicateBill(supabase, storeId, supplierId, billNumber.trim());
+        setBillDuplicate(isDup);
+      } catch {
+        setBillDuplicate(false);
+      }
+    }, 450);
+    return () => clearTimeout(t);
+  }, [billNumber, supplierId, storeId, supabase]);
 
   const addBlankLine = useCallback(() => {
     setLines((prev) => [
@@ -190,6 +206,7 @@ export function PurchaseClient({ storeId, storeName, storeCode, initialSuppliers
     setError(null);
     if (!supplierId) { setError('Pick a supplier first.'); return; }
     if (!billNumber.trim()) { setError('Enter the supplier bill number.'); return; }
+    if (billDuplicate) { setError(`Bill "${billNumber.trim()}" already exists for this supplier — check for duplicates.`); return; }
     if (lines.length === 0) { setError('Add at least one line.'); return; }
 
     for (const [i, l] of lines.entries()) {
@@ -300,6 +317,12 @@ export function PurchaseClient({ storeId, storeName, storeCode, initialSuppliers
         <Alert variant="info">
           Converting reorder PO-{purchaseOrder.order.id.slice(0, 8).toUpperCase()} from{' '}
           {purchaseOrder.order.supplier_name} — fill in batch, expiry, rate &amp; MRP for each line, then save.
+        </Alert>
+      )}
+
+      {billDuplicate && (
+        <Alert variant="error">
+          Bill &ldquo;{billNumber}&rdquo; already exists for this supplier — this appears to be a duplicate.
         </Alert>
       )}
 
