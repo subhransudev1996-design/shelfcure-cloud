@@ -3562,6 +3562,73 @@ export type Database = {
         Args: { p_payload: Json }
         Returns: string
       }
+      rpc_list_expense_categories: {
+        Args: { p_store_id: string }
+        Returns: {
+          id: string
+          name: string
+          is_system: boolean
+        }[]
+      }
+      rpc_add_expense_category: {
+        Args: { p_store_id: string; p_name: string }
+        Returns: string
+      }
+      rpc_delete_expense_category: {
+        Args: { p_store_id: string; p_category_id: string }
+        Returns: undefined
+      }
+      rpc_list_expenses: {
+        Args: { p_store_id: string; p_from: string; p_to: string }
+        Returns: {
+          id: string
+          category_id: string | null
+          category_name: string | null
+          description: string
+          amount: number
+          expense_date: string
+          payment_method: string | null
+          notes: string | null
+          created_at: string
+        }[]
+      }
+      rpc_add_expense: {
+        Args: {
+          p_store_id: string
+          p_description: string
+          p_amount: number
+          p_expense_date: string
+          p_category_id?: string | null
+          p_payment_method?: string
+          p_notes?: string | null
+        }
+        Returns: string
+      }
+      rpc_update_expense: {
+        Args: {
+          p_expense_id: string
+          p_store_id: string
+          p_description: string
+          p_amount: number
+          p_expense_date: string
+          p_category_id?: string | null
+          p_payment_method?: string
+          p_notes?: string | null
+        }
+        Returns: undefined
+      }
+      rpc_delete_expense: {
+        Args: { p_expense_id: string; p_store_id: string }
+        Returns: undefined
+      }
+      rpc_expense_summary: {
+        Args: { p_store_id: string; p_from: string; p_to: string }
+        Returns: {
+          category: string
+          total: number
+          cnt: number
+        }[]
+      }
       rpc_expiring_batches: {
         Args: { p_days?: number; p_limit?: number; p_store_id: string }
         Returns: {
