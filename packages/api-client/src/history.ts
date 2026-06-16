@@ -280,3 +280,103 @@ export async function getExpiringBatches(
   if (error) throw mapSupabaseError(error);
   return (data ?? []) as unknown as ExpiringBatchRow[];
 }
+
+// ─── Returns (§2.4) ──────────────────────────────────────────────────────────
+
+export interface SaleReturnListRow {
+  id: string;
+  return_number: string;
+  return_date: string;
+  bill_number: string;
+  sale_id: string;
+  customer_id: string | null;
+  customer_name: string;
+  item_count: number;
+  total_amount: number;
+  refund_method: string;
+  created_by_name: string;
+  created_at: string;
+}
+
+export async function listReturns(
+  client: Client,
+  opts: { storeId: string; from?: string; to?: string; limit?: number; offset?: number },
+): Promise<SaleReturnListRow[]> {
+  const { data, error } = await client.rpc('rpc_list_returns', {
+    p_store_id: opts.storeId,
+    p_from: opts.from,
+    p_to: opts.to,
+    p_limit: opts.limit ?? 100,
+    p_offset: opts.offset ?? 0,
+  });
+  if (error) throw mapSupabaseError(error);
+  return (data ?? []) as unknown as SaleReturnListRow[];
+}
+
+export interface ReturnDetail {
+  return_record: {
+    id: string;
+    return_number: string;
+    return_date: string;
+    created_at: string;
+    bill_number: string;
+    sale_id: string;
+    original_sale_date: string;
+    original_bill_date: string;
+    customer_id: string | null;
+    customer_name: string;
+    customer_phone: string | null;
+    subtotal: number;
+    total_amount: number;
+    refund_method: string;
+    reason: string | null;
+    processed_by_id: string | null;
+    processed_by_name: string;
+    store_name: string;
+    store_code: string;
+    store_address: string | null;
+    store_phone: string | null;
+    store_gstin: string | null;
+    store_drug_license: string | null;
+  };
+  items: Array<{
+    id: string;
+    medicine_name: string;
+    batch_number: string | null;
+    expiry_date: string | null;
+    hsn_code: string | null;
+    quantity: number;
+    mrp: number;
+    units_per_pack: number | null;
+    sale_unit_mode: string | null;
+    amount: number;
+  }>;
+}
+
+export async function getReturnDetail(client: Client, returnId: string): Promise<ReturnDetail> {
+  const { data, error } = await client.rpc('rpc_get_return_detail', { p_return_id: returnId });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as ReturnDetail;
+}
+
+export interface QuickBillRow {
+  sale_id: string;
+  bill_number: string;
+  bill_date: string;
+  customer_name: string;
+  total_amount: number;
+  medicine_snippet: string;
+}
+
+export async function quickBillFinder(
+  client: Client,
+  storeId: string,
+  query: string,
+): Promise<QuickBillRow[]> {
+  const { data, error } = await client.rpc('rpc_pos_quick_bill_finder', {
+    p_store_id: storeId,
+    p_query: query,
+  });
+  if (error) throw mapSupabaseError(error);
+  return (data ?? []) as unknown as QuickBillRow[];
+}

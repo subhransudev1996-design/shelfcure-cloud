@@ -3692,6 +3692,23 @@ export type Database = {
           total_amount: number
         }[]
       }
+      rpc_list_returns: {
+        Args: { p_store_id: string; p_from?: string; p_to?: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          id: string; return_number: string; return_date: string; bill_number: string
+          sale_id: string; customer_id: string | null; customer_name: string
+          item_count: number; total_amount: number; refund_method: string
+          created_by_name: string; created_at: string
+        }[]
+      }
+      rpc_get_return_detail: { Args: { p_return_id: string }; Returns: Json }
+      rpc_pos_quick_bill_finder: {
+        Args: { p_store_id: string; p_query: string }
+        Returns: {
+          sale_id: string; bill_number: string; bill_date: string
+          customer_name: string; total_amount: number; medicine_snippet: string
+        }[]
+      }
       rpc_list_sales: {
         Args: {
           p_from?: string
