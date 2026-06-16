@@ -3268,6 +3268,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      rpc_accept_challan: {
+        Args: { p_payload: Json }
+        Returns: Json
+      }
       rpc_add_batch_manual: {
         Args: { p_medicine_id: string; p_payload: Json; p_store_id: string }
         Returns: Json
@@ -3275,6 +3279,10 @@ export type Database = {
       rpc_check_duplicate_bill: {
         Args: { p_bill_number: string; p_store_id: string; p_supplier_id: string }
         Returns: boolean
+      }
+      rpc_create_challan: {
+        Args: { p_payload: Json }
+        Returns: string
       }
       rpc_commit_purchase: {
         Args: { p_payload: Json }
@@ -3408,6 +3416,10 @@ export type Database = {
           store_id: string
         }[]
       }
+      rpc_get_challan_detail: {
+        Args: { p_challan_id: string }
+        Returns: Json
+      }
       rpc_get_medicine_detail: {
         Args: { p_medicine_id: string; p_store_id: string }
         Returns: Json
@@ -3519,6 +3531,23 @@ export type Database = {
           qual: string
           roles: string[]
           with_check: string
+        }[]
+      }
+      rpc_list_challans: {
+        Args: { p_store_id: string; p_status?: string | null; p_supplier_id?: string | null }
+        Returns: {
+          id: string
+          supplier_id: string
+          supplier_name: string | null
+          challan_number: string
+          challan_date: string
+          expected_return_date: string | null
+          status: string
+          linked_purchase_id: string | null
+          total_items: number
+          total_quantity: number
+          notes: string | null
+          created_at: string
         }[]
       }
       rpc_list_purchase_orders: {
@@ -3766,6 +3795,10 @@ export type Database = {
           selling_price: number
         }[]
       }
+      rpc_pending_challan_count: {
+        Args: { p_store_id: string }
+        Returns: number
+      }
       rpc_pos_remove_hotkey_medicine: {
         Args: { p_digit: number; p_medicine_id: string; p_store_id: string }
         Returns: undefined
@@ -3845,6 +3878,10 @@ export type Database = {
           qty_sold: number
           revenue: number
         }[]
+      }
+      rpc_return_challan: {
+        Args: { p_challan_id: string; p_store_id: string }
+        Returns: Json
       }
       rpc_save_batch_barcodes: {
         Args: { p_batch_ids: string[] }
