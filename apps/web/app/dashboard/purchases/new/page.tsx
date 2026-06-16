@@ -49,6 +49,8 @@ export default async function NewPurchasePage({
         state: string;
         phone: string;
         gstin: string | null;
+        outstanding_balance: number;
+        credit_limit: number | null;
         is_active: boolean;
       }>}
       purchaseOrder={purchaseOrder}

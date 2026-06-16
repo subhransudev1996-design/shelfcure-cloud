@@ -46,7 +46,7 @@ export function DoctorPrescriptionSection({
 
   useEffect(() => {
     if (!enabled) return;
-    listDoctors(supabase, storeId).then(setDoctors).catch(() => setDoctors([]));
+    listDoctors(supabase, { storeId }).then(setDoctors).catch(() => setDoctors([]));
   }, [enabled, supabase, storeId]);
 
   // Click-outside closes the doctor picker.

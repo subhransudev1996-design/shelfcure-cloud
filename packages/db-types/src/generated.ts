@@ -3335,7 +3335,48 @@ export type Database = {
       rpc_create_doctor: {
         Args: { p_payload: Json }
         Returns: {
+          clinic_address: string
           clinic_name: string
+          commission_rate: number
+          commission_type: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string
+          specialization: string
+        }[]
+      }
+      rpc_get_doctor_detail: { Args: { p_doctor_id: string }; Returns: Json }
+      rpc_get_doctor_sales: {
+        Args: { p_doctor_id: string; p_from?: string; p_to?: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          sale_id: string
+          bill_number: string
+          bill_date: string
+          customer_name: string
+          total_amount: number
+          commission_amount: number
+        }[]
+      }
+      rpc_record_doctor_commission_payout: { Args: { p_payload: Json }; Returns: Json }
+      rpc_get_doctor_commission_payouts: {
+        Args: { p_doctor_id: string; p_limit?: number }
+        Returns: {
+          id: string
+          amount: number
+          notes: string
+          paid_at: string
+          paid_by_name: string
+          created_at: string
+        }[]
+      }
+      rpc_update_doctor: {
+        Args: { p_doctor_id: string; p_payload: Json }
+        Returns: {
+          clinic_address: string
+          clinic_name: string
+          commission_rate: number
+          commission_type: string
           id: string
           is_active: boolean
           name: string
@@ -3377,12 +3418,52 @@ export type Database = {
         Args: { p_payload: Json }
         Returns: {
           city: string
+          credit_limit: number
           gstin: string
           id: string
           is_active: boolean
           name: string
+          outstanding_balance: number
           phone: string
           state: string
+        }[]
+      }
+      rpc_get_supplier_detail: { Args: { p_supplier_id: string }; Returns: Json }
+      rpc_get_supplier_ledger: {
+        Args: { p_supplier_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          id: string
+          transaction_type: string
+          amount: number
+          balance_after: number
+          payment_method: string
+          notes: string
+          reference_type: string
+          reference_id: string
+          created_at: string
+        }[]
+      }
+      rpc_record_supplier_payment: { Args: { p_payload: Json }; Returns: Json }
+      rpc_update_supplier: { Args: { p_supplier_id: string; p_payload: Json }; Returns: Json }
+      rpc_get_supplier_medicines: {
+        Args: { p_supplier_id: string }
+        Returns: {
+          medicine_id: string
+          medicine_name: string
+          batch_id: string
+          batch_number: string
+          expiry_date: string
+          current_quantity: number
+          purchase_rate: number
+          mrp: number
+          gst_percentage: number
+          days_to_expiry: number
+          min_stock_level: number
+          reorder_level: number
+          is_low_stock: boolean
+          purchase_item_id: string
+          purchase_id: string
+          last_purchase_date: string
         }[]
       }
       rpc_dashboard_chart_data: {
@@ -3569,9 +3650,12 @@ export type Database = {
         }[]
       }
       rpc_list_doctors: {
-        Args: { p_store_id?: string }
+        Args: { p_store_id?: string; p_include_inactive?: boolean }
         Returns: {
+          clinic_address: string
           clinic_name: string
+          commission_rate: number
+          commission_type: string
           id: string
           is_active: boolean
           name: string
@@ -3774,13 +3858,15 @@ export type Database = {
         }[]
       }
       rpc_list_suppliers: {
-        Args: { p_store_id?: string }
+        Args: { p_store_id?: string; p_filter?: string }
         Returns: {
           city: string
+          credit_limit: number
           gstin: string
           id: string
           is_active: boolean
           name: string
+          outstanding_balance: number
           phone: string
           state: string
         }[]

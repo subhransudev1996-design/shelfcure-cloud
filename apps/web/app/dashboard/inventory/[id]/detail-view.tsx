@@ -556,7 +556,7 @@ function AddBatchModal({
         supplierId: '',
       });
       setError(null);
-      listSuppliers(supabase, storeId).then(setSuppliers).catch(() => setSuppliers([]));
+      listSuppliers(supabase, { storeId }).then(setSuppliers).catch(() => setSuppliers([]));
     }
   }, [open, oneYearOut, defaultGst, supabase, storeId]);
 
