@@ -37,6 +37,12 @@ export async function listSales(
   return (data ?? []) as unknown as SaleListRow[];
 }
 
+export async function getPrescriptionPath(client: Client, saleId: string): Promise<string | null> {
+  const { data, error } = await client.rpc('rpc_get_prescription_signed_url', { p_sale_id: saleId });
+  if (error) throw mapSupabaseError(error);
+  return (data ?? null) as string | null;
+}
+
 export interface SaleDetail {
   sale: Record<string, unknown> & {
     id: string;
@@ -62,6 +68,10 @@ export interface SaleDetail {
     org_name: string | null;
     org_gstin: string | null;
     is_prescription_sale: boolean | null;
+    is_returned: boolean;
+    is_fully_returned: boolean;
+    is_modified: boolean;
+    modified_at: string | null;
     doctor_id: string | null;
     doctor_name_resolved: string | null;
     doctor_specialization: string | null;
@@ -81,6 +91,9 @@ export interface SaleDetail {
     payment_method: string;
     payment_status: string;
     paid_amount: number;
+    cost_amount: number | null;
+    gross_profit: number | null;
+    profit_margin_pct: number | null;
   };
   items: Array<{
     id: string;
@@ -90,8 +103,10 @@ export interface SaleDetail {
     expiry_date: string | null;
     hsn_code: string | null;
     quantity: number;
+    returned_quantity: number;
     mrp: number;
     gst_percentage: number;
+    discount_percentage: number;
     taxable_amount: number;
     cgst_amount: number;
     sgst_amount: number;
@@ -101,9 +116,11 @@ export interface SaleDetail {
     misc_note: string | null;
   }>;
   payments: Array<{
+    id: string;
     payment_method: string;
     amount: number;
     reference_number: string | null;
+    created_at: string;
   }>;
 }
 

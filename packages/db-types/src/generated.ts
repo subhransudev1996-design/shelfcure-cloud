@@ -3543,6 +3543,7 @@ export type Database = {
         Returns: Json
       }
       rpc_get_sale_detail: { Args: { p_sale_id: string }; Returns: Json }
+      rpc_get_prescription_signed_url: { Args: { p_sale_id: string }; Returns: string | null }
       rpc_list_batches_for_barcodes: {
         Args: { p_medicine_id?: string; p_store_id: string }
         Returns: {
