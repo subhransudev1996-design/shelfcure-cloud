@@ -1,273 +1,176 @@
 import Link from 'next/link';
-import { getSupabaseServerClient } from '../../../lib/supabase/server';
-import { resolveActiveStoreId } from '../../../lib/active-store';
-import { PageHeader } from '../../../components/ui/page-header';
 
-function fmtINR(n: number) {
-  return `₹${Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-function fmtCompact(n: number) {
-  if (Math.abs(n) >= 100000) return `₹${(n / 100000).toFixed(1)}L`;
-  if (Math.abs(n) >= 1000) return `₹${(n / 1000).toFixed(1)}K`;
-  return `₹${Math.round(n)}`;
-}
-function fmtDay(iso: string) {
-  return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+function fiscalYear() {
+  const now = new Date();
+  const m = now.getMonth(); // 0-indexed, March = 2
+  const y = now.getFullYear();
+  // Indian FY: Apr–Mar. If month >= March (index 2), FY starts this year
+  if (m >= 3) return `${y}-${String(y + 1).slice(-2)}`;
+  return `${y - 1}-${String(y).slice(-2)}`;
 }
 
-interface SearchParams {
-  searchParams: Promise<{ days?: string }>;
+function fmtTime(d: Date) {
+  return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
-export default async function ReportsPage({ searchParams }: SearchParams) {
-  const sp = await searchParams;
-  const days = Math.max(7, Math.min(parseInt(sp.days ?? '30', 10) || 30, 90));
+const REPORT_CARDS = [
+  {
+    id: 1, title: 'Overall Performance', desc: 'Health score, KPIs, inventory & credit health',
+    path: '/dashboard/reports/performance', color: 'bg-violet-50', iconColor: 'text-violet-600',
+    icon: 'M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2Zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 0-2 2h-2a2 2 0 0 0-2-2Z',
+  },
+  {
+    id: 2, title: 'Daily / Weekly / Monthly', desc: 'Period summary: sales, profit, GST, payments',
+    path: '/dashboard/reports/sales', color: 'bg-emerald-50', iconColor: 'text-emerald-600',
+    icon: 'M4 20V10M10 20V4M16 20v-8M22 20H2',
+  },
+  {
+    id: 3, title: 'Profit Tracking', desc: 'P&L, daily trend, top earners, margin & loss makers',
+    path: '/dashboard/reports/profit', color: 'bg-green-50', iconColor: 'text-green-700',
+    icon: 'M3 17l4-8 4 4 4-6 4 4',
+  },
+  {
+    id: 4, title: 'Cash vs Credit', desc: 'Sales split, credit aging & top debtors',
+    path: '/dashboard/reports/cash-credit', color: 'bg-blue-50', iconColor: 'text-blue-600',
+    icon: 'M2 5h20v14H2z M2 10h20',
+  },
+  {
+    id: 5, title: 'Daily Collection', desc: 'Per-day Cash / UPI / Card tally for reconciliation',
+    path: '/dashboard/reports/daily-collection', color: 'bg-indigo-50', iconColor: 'text-indigo-600',
+    icon: 'M12 3v1m0 16v1M4.22 4.22l.7.7m12.02 12.02.7.7M1 12h1m18 0h1M4.22 19.78l.7-.7M18.36 5.64l-.7.7',
+  },
+  {
+    id: 6, title: 'Hourly Report', desc: 'Peak hours, hour-of-day patterns & heatmap',
+    path: '/dashboard/reports/hourly', color: 'bg-sky-50', iconColor: 'text-sky-600',
+    icon: 'M12 6v6l4 2m-4-8a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z',
+  },
+  {
+    id: 7, title: 'Growth Trend', desc: 'Period-over-period growth & 12-month trajectory',
+    path: '/dashboard/reports/growth', color: 'bg-teal-50', iconColor: 'text-teal-600',
+    icon: 'M22 12h-4l-3 9L9 3l-3 9H2',
+  },
+  {
+    id: 8, title: 'Stock Summary', desc: 'Inventory valuation, movement & low-stock alert',
+    path: '/dashboard/reports/stock', color: 'bg-amber-50', iconColor: 'text-amber-700',
+    icon: 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z',
+  },
+  {
+    id: 9, title: 'Stock Movement', desc: 'Inflow / outflow / net change per medicine',
+    path: '/dashboard/reports/stock-movement', color: 'bg-orange-50', iconColor: 'text-orange-600',
+    icon: 'M7 16V4m0 0L3 8m4-4 4 4M17 8v12m0 0 4-4m-4 4-4-4',
+  },
+  {
+    id: 10, title: 'Stock Velocity', desc: 'Fast-moving, slow-moving & dead stock detection',
+    path: '/dashboard/reports/velocity', color: 'bg-rose-50', iconColor: 'text-rose-600',
+    icon: 'M13 2L3 14h9l-1 8 10-12h-9l1-8Z',
+  },
+  {
+    id: 11, title: 'Shortage Report', desc: 'Out-of-stock & low items — by supplier and company',
+    path: '/dashboard/reports/shortage', color: 'bg-red-50', iconColor: 'text-red-600',
+    icon: 'M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z M12 9v4M12 17h.01',
+  },
+  {
+    id: 12, title: 'Expiry Report', desc: 'Batches nearing or past expiry with value loss',
+    path: '/dashboard/reports/expiry', color: 'bg-yellow-50', iconColor: 'text-yellow-700',
+    icon: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z M12 14h.01M8 14h.01M16 14h.01M12 18h.01M8 18h.01M16 18h.01',
+  },
+  {
+    id: 13, title: 'Expense Analysis', desc: 'Operational costs breakdown by category',
+    path: '/dashboard/finance', color: 'bg-zinc-50', iconColor: 'text-zinc-600',
+    icon: 'M2 5h20v14H2z M2 10h20 M6 15h4M14 15h4',
+  },
+  {
+    id: 14, title: 'GST Summary', desc: 'Input / output tax breakdown for monthly filing',
+    path: '/dashboard/reports/gst', color: 'bg-purple-50', iconColor: 'text-purple-700',
+    icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z M14 2v6h6 M16 13H8M16 17H8M10 9H8',
+  },
+  {
+    id: 15, title: 'Annual GST (GSTR-9)', desc: 'Full financial-year GST summary — GSTR-9 ready',
+    path: '/dashboard/reports/gst/annual', color: 'bg-fuchsia-50', iconColor: 'text-fuchsia-700',
+    icon: 'M9 12l2 2 4-4M7 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8l-6-6Z M7 2v6h10',
+  },
+  {
+    id: 16, title: 'Sales Returns', desc: 'Refunds, credit notes & restocked inventory',
+    path: '/dashboard/reports/returns', color: 'bg-cyan-50', iconColor: 'text-cyan-700',
+    icon: 'M1 4v6h6M23 20v-6h-6 M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15',
+  },
+  {
+    id: 17, title: 'Purchase Returns', desc: 'Debit notes & items reverted to suppliers',
+    path: '/dashboard/reports/purchase-returns', color: 'bg-lime-50', iconColor: 'text-lime-700',
+    icon: 'M3 7h13l3 4h2v7h-2a2 2 0 1 1-4 0H10a2 2 0 1 1-4 0H3V7Z M3 11h13',
+  },
+  {
+    id: 18, title: 'Doctor Prescriptions', desc: 'Revenue & bills earned through doctor recommendations',
+    path: '/dashboard/reports/doctors', color: 'bg-pink-50', iconColor: 'text-pink-600',
+    icon: 'M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M5 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1 M17 8l1.5 1.5M17 8l-1.5 1.5M17 8v3',
+  },
+];
 
-  const supabase = await getSupabaseServerClient();
-  const storeId = await resolveActiveStoreId(supabase);
-  if (!storeId) {
-    return (
-      <div className="mx-auto max-w-md py-16 text-center">
-        <h1 className="text-2xl font-semibold text-zinc-900">No store yet</h1>
-        <Link href="/dashboard/stores" className="mt-4 inline-flex text-sm font-medium text-emerald-700 hover:text-emerald-800">
-          Create your first store →
-        </Link>
-      </div>
-    );
-  }
-
-  const today = new Date();
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
-  const todayIso = today.toISOString().slice(0, 10);
-
-  const [trendRes, topRes, gstRes] = await Promise.all([
-    supabase.rpc('rpc_report_sales_trend', { p_store_id: storeId, p_days: days }),
-    supabase.rpc('rpc_report_top_medicines', { p_store_id: storeId, p_days: days, p_limit: 10 }),
-    supabase.rpc('rpc_report_gst_summary', { p_store_id: storeId, p_from: monthStart, p_to: todayIso }),
-  ]);
-
-  const trend = (trendRes.data ?? []) as Array<{
-    day: string;
-    bill_count: number;
-    total_amount: number;
-    gst_amount: number;
-  }>;
-  const top = (topRes.data ?? []) as Array<{
-    medicine_id: string;
-    name: string;
-    manufacturer: string;
-    qty_sold: number;
-    revenue: number;
-    bills: number;
-  }>;
-  const gst = (gstRes.data ?? []) as Array<{
-    gst_rate: number;
-    taxable_amount: number;
-    cgst_amount: number;
-    sgst_amount: number;
-    igst_amount: number;
-    total_amount: number;
-    line_count: number;
-  }>;
-
-  const totalRevenue = trend.reduce((s, d) => s + Number(d.total_amount), 0);
-  const totalBills = trend.reduce((s, d) => s + d.bill_count, 0);
-  const totalGst = trend.reduce((s, d) => s + Number(d.gst_amount), 0);
-  const avgBill = totalBills > 0 ? totalRevenue / totalBills : 0;
-  const trendMax = Math.max(1, ...trend.map((d) => Number(d.total_amount)));
+export default async function ReportsPage() {
+  const now = new Date();
+  const fy = fiscalYear();
+  const time = fmtTime(now);
 
   return (
-    <>
-      <PageHeader
-        eyebrow="Reports"
-        title={`Last ${days} days`}
-        description="Sales trend, top sellers, and GST breakdown for the active store."
-        actions={
-          <div className="flex gap-1 rounded-xl border border-zinc-200 bg-white p-1 shadow-sm">
-            {[7, 30, 90].map((d) => (
-              <Link
-                key={d}
-                href={`/dashboard/reports?days=${d}`}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                  d === days
-                    ? 'bg-emerald-50 text-emerald-800'
-                    : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
-                }`}
-              >
-                {d}d
-              </Link>
-            ))}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50">
+            <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-indigo-600">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
-        }
-      />
-
-      {/* KPI strip */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="Revenue" value={fmtINR(totalRevenue)} sub={`${days} days`} tone="emerald" />
-        <Kpi label="Bills" value={String(totalBills)} sub={`avg ${fmtINR(avgBill)} per bill`} />
-        <Kpi label="GST collected" value={fmtINR(totalGst)} sub="CGST + SGST + IGST" />
-        <Kpi label="Per day" value={fmtINR(totalRevenue / days)} sub="Average revenue" tone="violet" />
-      </section>
-
-      {/* Sales trend — simple inline bar chart, no chart lib */}
-      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-baseline justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-zinc-900">Daily revenue</h3>
-            <p className="text-xs text-zinc-500">Bars scaled to the highest-revenue day in the window.</p>
+            <h1 className="text-2xl font-black text-zinc-900">Reports & Analytics</h1>
+            <p className="text-xs text-zinc-500">Business intelligence for your pharmacy</p>
           </div>
         </div>
-        {trend.length === 0 ? (
-          <div className="py-8 text-center text-sm text-zinc-400">No sales in this window.</div>
-        ) : (
-          <div className="flex h-44 items-end gap-1">
-            {trend.map((d) => {
-              const v = Number(d.total_amount);
-              const pct = (v / trendMax) * 100;
-              const isToday = d.day === todayIso;
-              return (
-                <div
-                  key={d.day}
-                  className="group relative flex flex-1 flex-col items-center justify-end"
-                  title={`${fmtDay(d.day)} · ${fmtINR(v)} · ${d.bill_count} bills`}
-                >
-                  <div
-                    className={`w-full rounded-t transition-all ${
-                      isToday
-                        ? 'bg-gradient-to-t from-emerald-600 to-emerald-400'
-                        : 'bg-gradient-to-t from-zinc-700 to-zinc-400 group-hover:from-emerald-600 group-hover:to-emerald-400'
-                    }`}
-                    style={{ height: `${Math.max(pct, 2)}%` }}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {trend.length > 0 && (
-          <div className="mt-2 flex justify-between text-[10px] text-zinc-400">
-            <span>{fmtDay(trend[0]!.day)}</span>
-            <span>{fmtDay(trend[trend.length - 1]!.day)}</span>
-          </div>
-        )}
-      </section>
 
-      <section className="mt-6 grid gap-4 lg:grid-cols-[1fr_360px]">
-        {/* Top medicines */}
-        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-100 px-5 py-4">
-            <h3 className="text-sm font-semibold text-zinc-900">Top medicines</h3>
-            <p className="text-xs text-zinc-500">Ranked by revenue. Top 10 in the selected window.</p>
-          </div>
-          {top.length === 0 ? (
-            <div className="py-10 text-center text-sm text-zinc-400">No sales in this window yet.</div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-zinc-50 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                <tr>
-                  <th className="px-4 py-2.5">#</th>
-                  <th className="px-4 py-2.5">Medicine</th>
-                  <th className="w-20 px-4 py-2.5 text-right">Bills</th>
-                  <th className="w-20 px-4 py-2.5 text-right">Qty</th>
-                  <th className="w-28 px-4 py-2.5 text-right">Revenue</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100">
-                {top.map((m, i) => (
-                  <tr key={m.medicine_id} className="hover:bg-zinc-50/60">
-                    <td className="px-4 py-2 font-mono text-xs text-zinc-400">{i + 1}</td>
-                    <td className="px-4 py-2">
-                      <div className="font-medium text-zinc-900">{m.name}</div>
-                      <div className="text-xs text-zinc-500">{m.manufacturer || '—'}</div>
-                    </td>
-                    <td className="px-4 py-2 text-right text-zinc-600">{m.bills}</td>
-                    <td className="px-4 py-2 text-right font-mono text-zinc-700">{m.qty_sold}</td>
-                    <td className="px-4 py-2 text-right font-mono font-medium text-zinc-900">
-                      {fmtCompact(Number(m.revenue))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        {/* Meta bar */}
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          <span className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 font-medium text-zinc-600 shadow-sm">
+            FY {fy}
+          </span>
+          <span className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 font-medium text-zinc-600 shadow-sm">
+            Updated {time}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-600" />
+            </span>
+            Live Engine
+          </span>
         </div>
+      </div>
 
-        {/* GST summary */}
-        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-100 px-5 py-4">
-            <h3 className="text-sm font-semibold text-zinc-900">GST summary</h3>
-            <p className="text-xs text-zinc-500">This month, by GST slab.</p>
-          </div>
-          {gst.length === 0 ? (
-            <div className="py-10 text-center text-sm text-zinc-400">No GST collected this month.</div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-zinc-50 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
-                <tr>
-                  <th className="px-3 py-2.5">Slab</th>
-                  <th className="px-3 py-2.5 text-right">Taxable</th>
-                  <th className="px-3 py-2.5 text-right">GST</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100">
-                {gst.map((row) => {
-                  const totalGst =
-                    Number(row.cgst_amount) + Number(row.sgst_amount) + Number(row.igst_amount);
-                  return (
-                    <tr key={String(row.gst_rate)}>
-                      <td className="px-3 py-2 font-mono text-zinc-700">{Number(row.gst_rate)}%</td>
-                      <td className="px-3 py-2 text-right font-mono text-zinc-700">
-                        {fmtCompact(Number(row.taxable_amount))}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono font-medium text-zinc-900">
-                        {fmtCompact(totalGst)}
-                      </td>
-                    </tr>
-                  );
-                })}
-                <tr className="border-t-2 border-zinc-200 bg-zinc-50">
-                  <td className="px-3 py-2.5 font-medium text-zinc-700">Total</td>
-                  <td className="px-3 py-2.5 text-right font-mono font-medium text-zinc-900">
-                    {fmtCompact(gst.reduce((s, r) => s + Number(r.taxable_amount), 0))}
-                  </td>
-                  <td className="px-3 py-2.5 text-right font-mono font-medium text-zinc-900">
-                    {fmtCompact(
-                      gst.reduce(
-                        (s, r) => s + Number(r.cgst_amount) + Number(r.sgst_amount) + Number(r.igst_amount),
-                        0,
-                      ),
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          )}
-        </div>
-      </section>
-    </>
-  );
-}
-
-function Kpi({
-  label,
-  value,
-  sub,
-  tone = 'zinc',
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  tone?: 'zinc' | 'emerald' | 'violet';
-}) {
-  const ring =
-    tone === 'emerald' ? 'ring-emerald-200' : tone === 'violet' ? 'ring-violet-200' : 'ring-zinc-200';
-  const accent =
-    tone === 'emerald' ? 'text-emerald-700' : tone === 'violet' ? 'text-violet-700' : 'text-zinc-700';
-  return (
-    <div className={`rounded-2xl bg-white p-5 shadow-sm ring-1 ${ring}`}>
-      <div className={`text-xs font-medium uppercase tracking-wide ${accent}`}>{label}</div>
-      <div className="mt-2 font-mono text-2xl font-semibold tracking-tight text-zinc-900">{value}</div>
-      {sub && <div className="mt-0.5 text-xs text-zinc-500">{sub}</div>}
+      {/* 18-card grid */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {REPORT_CARDS.map((card) => (
+          <Link
+            key={card.id}
+            href={card.path}
+            className="group flex flex-col rounded-2xl border border-zinc-200 bg-white shadow-sm transition-all hover:border-indigo-300 hover:shadow-md"
+          >
+            <div className="flex items-start gap-3 p-5">
+              <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.color}`}>
+                <svg viewBox="0 0 24 24" fill="none" className={`h-5 w-5 ${card.iconColor}`}>
+                  <path d={card.icon} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-zinc-900 group-hover:text-indigo-700 transition-colors">{card.title}</p>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-zinc-400">{card.desc}</p>
+              </div>
+            </div>
+            <div className="mt-auto flex items-center justify-between border-t border-zinc-100 px-5 py-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-300">Report #{card.id}</span>
+              <span className="text-xs font-semibold text-indigo-600 group-hover:underline">Open Report →</span>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

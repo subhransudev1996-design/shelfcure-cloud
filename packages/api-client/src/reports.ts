@@ -4,6 +4,8 @@ import { mapSupabaseError } from './errors';
 
 type Client = SupabaseClient<Database>;
 
+// ── Existing RPCs (kept for backwards compat / dashboard widget) ─────────────
+
 export interface SalesTrendDay {
   day: string;
   bill_count: number;
@@ -64,4 +66,199 @@ export async function reportGstSummary(
   });
   if (error) throw mapSupabaseError(error);
   return (data ?? []) as unknown as GstSlabRow[];
+}
+
+// ── New §2.11 report functions ────────────────────────────────────────────────
+
+export interface ExpiryReportRow {
+  batch_id: string;
+  batch_number: string;
+  medicine_id: string;
+  medicine_name: string;
+  manufacturer: string;
+  supplier_id: string | null;
+  supplier_name: string | null;
+  expiry_date: string;
+  current_quantity: number;
+  purchase_rate: number;
+  mrp: number;
+  gst_percentage: number;
+  sale_unit_mode: string;
+  units_per_pack: number;
+  pack_unit: string;
+  days_to_expiry: number;
+  is_expired: boolean;
+  value_at_mrp: number;
+}
+
+export async function reportExpiry(
+  client: Client,
+  storeId: string,
+  daysAhead = 90,
+): Promise<ExpiryReportRow[]> {
+  const { data, error } = await client.rpc('rpc_report_expiry', {
+    p_store_id: storeId,
+    p_days_ahead: daysAhead,
+  });
+  if (error) throw mapSupabaseError(error);
+  return (data ?? []) as unknown as ExpiryReportRow[];
+}
+
+export interface ShortageReportRow {
+  medicine_id: string;
+  medicine_name: string;
+  manufacturer: string;
+  current_quantity: number;
+  min_stock_level: number;
+  reorder_level: number;
+  sale_unit_mode: string;
+  units_per_pack: number;
+  pack_unit: string;
+  is_out_of_stock: boolean;
+  shortage_qty: number;
+  primary_supplier_id: string | null;
+  primary_supplier_name: string;
+  last_purchase_date: string | null;
+  last_purchase_rate: number | null;
+  estimated_reorder_value: number;
+}
+
+export async function reportShortage(client: Client, storeId: string): Promise<ShortageReportRow[]> {
+  const { data, error } = await client.rpc('rpc_report_shortage', { p_store_id: storeId });
+  if (error) throw mapSupabaseError(error);
+  return (data ?? []) as unknown as ShortageReportRow[];
+}
+
+export interface StockSummaryRow {
+  medicine_id: string;
+  medicine_name: string;
+  manufacturer: string;
+  sale_unit_mode: string;
+  units_per_pack: number;
+  pack_unit: string;
+  min_stock_level: number;
+  reorder_level: number;
+  total_quantity: number;
+  active_batches: number;
+  nearest_expiry: string | null;
+  stock_value: number;
+  is_low_stock: boolean;
+}
+
+export async function reportStockSummary(client: Client, storeId: string): Promise<StockSummaryRow[]> {
+  const { data, error } = await client.rpc('rpc_report_stock_summary', { p_store_id: storeId });
+  if (error) throw mapSupabaseError(error);
+  return (data ?? []) as unknown as StockSummaryRow[];
+}
+
+export type GstMonthlyReport = {
+  period: { month: number; year: number; from: string; to: string };
+  output: {
+    taxable: number; cgst: number; sgst: number; igst: number; total_gst: number;
+    slabs: Array<{ gst_rate: number; transactions: number; taxable_amount: number; cgst: number; sgst: number; igst: number; total_gst: number }>;
+  };
+  input: {
+    taxable: number; cgst: number; sgst: number; igst: number; total_gst: number;
+    slabs: Array<{ gst_rate: number; transactions: number; taxable_amount: number; cgst: number; sgst: number; igst: number; total_gst: number }>;
+  };
+  sr_gst: number;
+  sr_taxable: number;
+  pr_gst: number;
+  pr_taxable: number;
+  net_output_gst: number;
+  net_itc: number;
+  net_payable: number;
+};
+
+export async function reportGstMonthly(
+  client: Client,
+  storeId: string,
+  month: number,
+  year: number,
+): Promise<GstMonthlyReport> {
+  const { data, error } = await client.rpc('rpc_report_gst_monthly', {
+    p_store_id: storeId,
+    p_month: month,
+    p_year: year,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as GstMonthlyReport;
+}
+
+export type DoctorReportData = {
+  period: { from: string; to: string };
+  total_sales: number;
+  prescription_count: number;
+  prescription_revenue: number;
+  prescription_share: number;
+  total_commission_earned: number;
+  total_gross_profit: number;
+  total_net_profit: number;
+  doctors: Array<{
+    doctor_id: string;
+    doctor_name: string;
+    commission_type: string;
+    commission_rate: number;
+    sale_count: number;
+    revenue: number;
+    gross_profit: number;
+    commission_earned: number;
+    net_profit: number;
+  }>;
+};
+
+export async function reportDoctors(
+  client: Client,
+  storeId: string,
+  from?: string,
+  to?: string,
+): Promise<DoctorReportData> {
+  const { data, error } = await client.rpc('rpc_report_doctors', {
+    p_store_id: storeId,
+    p_from: from ?? null,
+    p_to: to ?? null,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as DoctorReportData;
+}
+
+export type DailyReportData = {
+  period: { from: string; to: string };
+  bill_count: number;
+  gross_sales: number;
+  total_paid: number;
+  total_gst: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  customer_count: number;
+  credit_extended: number;
+  avg_bill_value: number;
+  returns_count: number;
+  returns_total: number;
+  net_sales: number;
+  gross_profit: number;
+  expenses_total: number;
+  net_profit: number;
+  purchases_count: number;
+  purchases_total: number;
+  customer_payments_total: number;
+  top_medicines: TopMedicineRow[];
+  daily_breakdown: Array<{ day: string; bill_count: number; gross_sales: number; returns_total: number; net_sales: number }>;
+  payments: Array<{ method: string; amount: number; cnt: number }>;
+};
+
+export async function reportDaily(
+  client: Client,
+  storeId: string,
+  from: string,
+  to: string,
+): Promise<DailyReportData> {
+  const { data, error } = await client.rpc('rpc_report_daily', {
+    p_store_id: storeId,
+    p_from: from,
+    p_to: to,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as DailyReportData;
 }

@@ -4124,6 +4124,80 @@ export type Database = {
         Args: { p_medicine_id: string; p_value: boolean }
         Returns: boolean
       }
+      rpc_report_expiry: {
+        Args: { p_store_id: string; p_days_ahead?: number }
+        Returns: {
+          batch_id: string
+          batch_number: string
+          medicine_id: string
+          medicine_name: string
+          manufacturer: string
+          supplier_id: string | null
+          supplier_name: string | null
+          expiry_date: string
+          current_quantity: number
+          purchase_rate: number
+          mrp: number
+          gst_percentage: number
+          sale_unit_mode: string
+          units_per_pack: number
+          pack_unit: string
+          days_to_expiry: number
+          is_expired: boolean
+          value_at_mrp: number
+        }[]
+      }
+      rpc_report_shortage: {
+        Args: { p_store_id: string }
+        Returns: {
+          medicine_id: string
+          medicine_name: string
+          manufacturer: string
+          current_quantity: number
+          min_stock_level: number
+          reorder_level: number
+          sale_unit_mode: string
+          units_per_pack: number
+          pack_unit: string
+          is_out_of_stock: boolean
+          shortage_qty: number
+          primary_supplier_id: string | null
+          primary_supplier_name: string
+          last_purchase_date: string | null
+          last_purchase_rate: number | null
+          estimated_reorder_value: number
+        }[]
+      }
+      rpc_report_stock_summary: {
+        Args: { p_store_id: string }
+        Returns: {
+          medicine_id: string
+          medicine_name: string
+          manufacturer: string
+          sale_unit_mode: string
+          units_per_pack: number
+          pack_unit: string
+          min_stock_level: number
+          reorder_level: number
+          total_quantity: number
+          active_batches: number
+          nearest_expiry: string | null
+          stock_value: number
+          is_low_stock: boolean
+        }[]
+      }
+      rpc_report_gst_monthly: {
+        Args: { p_store_id: string; p_month: number; p_year: number }
+        Returns: Json
+      }
+      rpc_report_doctors: {
+        Args: { p_store_id: string; p_from?: string | null; p_to?: string | null }
+        Returns: Json
+      }
+      rpc_report_daily: {
+        Args: { p_store_id: string; p_from: string; p_to: string }
+        Returns: Json
+      }
       rpc_report_gst_summary: {
         Args: { p_from?: string; p_store_id: string; p_to?: string }
         Returns: {
