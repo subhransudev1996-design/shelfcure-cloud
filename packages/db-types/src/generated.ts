@@ -3589,9 +3589,11 @@ export type Database = {
           bill_number: string
           created_at: string
           id: string
+          is_ai_scanned: boolean
           payment_status: string
+          return_status: string
           supplier_id: string
-          supplier_name: string
+          supplier_name: string | null
           total_amount: number
         }[]
       }
@@ -3798,6 +3800,10 @@ export type Database = {
       rpc_pending_challan_count: {
         Args: { p_store_id: string }
         Returns: number
+      }
+      rpc_soft_delete_purchase: {
+        Args: { p_purchase_id: string; p_store_id: string }
+        Returns: undefined
       }
       rpc_pos_remove_hotkey_medicine: {
         Args: { p_digit: number; p_medicine_id: string; p_store_id: string }

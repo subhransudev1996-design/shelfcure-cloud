@@ -122,67 +122,6 @@ export async function getSaleDetail(client: Client, saleId: string): Promise<Sal
   return data as unknown as SaleDetail;
 }
 
-export interface PurchaseListRow {
-  id: string;
-  bill_number: string;
-  bill_date: string;
-  supplier_id: string | null;
-  supplier_name: string;
-  total_amount: number;
-  payment_status: string;
-  created_at: string;
-}
-
-export async function listPurchases(
-  client: Client,
-  opts: { storeId: string; from?: string; to?: string; limit?: number; offset?: number },
-): Promise<PurchaseListRow[]> {
-  const { data, error } = await client.rpc('rpc_list_purchases', {
-    p_store_id: opts.storeId,
-    p_from: opts.from ?? undefined,
-    p_to: opts.to ?? undefined,
-    p_limit: opts.limit ?? 50,
-    p_offset: opts.offset ?? 0,
-  });
-  if (error) throw mapSupabaseError(error);
-  return (data ?? []) as unknown as PurchaseListRow[];
-}
-
-export interface PurchaseDetail {
-  purchase: Record<string, unknown> & {
-    id: string;
-    bill_number: string;
-    bill_date: string;
-    supplier_name: string;
-    supplier_gstin: string | null;
-    store_name: string;
-    store_code: string;
-    subtotal: number;
-    gst_amount: number;
-    discount_amount: number;
-    total_amount: number;
-    payment_status: string;
-  };
-  items: Array<{
-    id: string;
-    medicine_id: string | null;
-    medicine_name: string;
-    batch_number: string | null;
-    expiry_date: string | null;
-    quantity: number;
-    purchase_rate: number;
-    mrp: number;
-    gst_percentage: number;
-    amount: number;
-  }>;
-}
-
-export async function getPurchaseDetail(client: Client, purchaseId: string): Promise<PurchaseDetail> {
-  const { data, error } = await client.rpc('rpc_get_purchase_detail', { p_purchase_id: purchaseId });
-  if (error) throw mapSupabaseError(error);
-  return data as unknown as PurchaseDetail;
-}
-
 // ============================================================================
 // Dashboard
 // ============================================================================
