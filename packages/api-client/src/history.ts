@@ -14,6 +14,10 @@ export interface SaleListRow {
   payment_method: string;
   payment_status: string;
   is_returned: boolean;
+  is_fully_returned: boolean;
+  is_modified: boolean;
+  source: string;
+  item_count: number;
   created_at: string;
   created_by_name: string;
 }

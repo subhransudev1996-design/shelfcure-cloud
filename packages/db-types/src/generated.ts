@@ -3707,9 +3707,13 @@ export type Database = {
           customer_id: string
           customer_name: string
           id: string
+          is_fully_returned: boolean
+          is_modified: boolean
           is_returned: boolean
+          item_count: number
           payment_method: string
           payment_status: string
+          source: string
           total_amount: number
         }[]
       }
