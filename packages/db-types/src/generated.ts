@@ -3386,7 +3386,77 @@ export type Database = {
         }[]
       }
       rpc_dashboard_summary: { Args: { p_store_id?: string }; Returns: Json }
+      rpc_delete_customer_routine: { Args: { p_id: string }; Returns: undefined }
       rpc_delete_purchase_return: { Args: { p_return_id: string }; Returns: undefined }
+      rpc_get_customer_detail: {
+        Args: { p_customer_id: string }
+        Returns: Json
+      }
+      rpc_get_customer_ledger: {
+        Args: { p_customer_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          id: string
+          transaction_type: string
+          reference_type: string | null
+          reference_id: string | null
+          amount: number
+          balance_after: number
+          payment_method: string | null
+          notes: string | null
+          created_at: string
+        }[]
+      }
+      rpc_get_customer_routine: {
+        Args: { p_customer_id: string }
+        Returns: {
+          id: string
+          medicine_id: string
+          medicine_name: string
+          sale_unit_mode: string
+          units_per_pack: number | null
+          interval_days: number | null
+          remind_days_before: number
+          last_dispensed_date: string | null
+          next_due_date: string | null
+          days_until_due: number | null
+          notes: string | null
+        }[]
+      }
+      rpc_list_customer_returns: {
+        Args: { p_customer_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          id: string
+          return_number: string
+          return_date: string
+          bill_number: string
+          sale_id: string
+          total_amount: number
+          refund_method: string | null
+          created_at: string
+        }[]
+      }
+      rpc_list_customer_sales: {
+        Args: { p_customer_id: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          id: string
+          bill_number: string
+          bill_date: string
+          total_amount: number
+          paid_amount: number
+          payment_status: string
+          items_count: number
+          created_at: string
+        }[]
+      }
+      rpc_record_customer_payment: {
+        Args: { p_payload: Json }
+        Returns: Json
+      }
+      rpc_update_customer: { Args: { p_payload: Json }; Returns: undefined }
+      rpc_upsert_customer_routine: {
+        Args: { p_payload: Json }
+        Returns: string
+      }
       rpc_expiring_batches: {
         Args: { p_days?: number; p_limit?: number; p_store_id: string }
         Returns: {
