@@ -11,6 +11,10 @@ create table if not exists expense_categories (
   created_at  timestamptz not null default now()
 );
 
+-- migration 0007 created an earlier org-scoped expense_categories table without
+-- a store_id column; add it here so this store-scoped model can layer on top.
+alter table expense_categories add column if not exists store_id uuid references stores(id) on delete cascade;
+
 -- System seed (store_id IS NULL, no org_id required)
 -- We seed with a stable UUID per name so re-running is idempotent
 insert into expense_categories (id, store_id, org_id, name, is_system) values
@@ -24,6 +28,13 @@ on conflict (id) do nothing;
 
 -- RLS on expense_categories
 alter table expense_categories enable row level security;
+
+-- migration 0007 already created policies named ec_select/ec_insert plus (after
+-- our store_id column add) potential name clashes if this file is re-run; drop
+-- and recreate ours by name for idempotency.
+drop policy if exists "expense_categories_select" on expense_categories;
+drop policy if exists "expense_categories_insert" on expense_categories;
+drop policy if exists "expense_categories_delete" on expense_categories;
 
 -- Authenticated users can read system categories (store_id IS NULL) OR their store's categories
 create policy "expense_categories_select"
@@ -85,6 +96,14 @@ create index if not exists expenses_category_idx  on expenses(category_id);
 
 -- RLS on expenses
 alter table expenses enable row level security;
+
+-- migration 0007 already created policies with these same names (different
+-- definitions, scoped via user_has_store_access instead of a direct subquery);
+-- drop and recreate so this file's store-scoped versions win.
+drop policy if exists "expenses_select" on expenses;
+drop policy if exists "expenses_insert" on expenses;
+drop policy if exists "expenses_update" on expenses;
+drop policy if exists "expenses_delete" on expenses;
 
 create policy "expenses_select"
   on expenses for select
@@ -221,6 +240,7 @@ begin
     left join expense_categories ec on ec.id = e.category_id
     where e.store_id = p_store_id
       and e.expense_date between p_from and p_to
+      and e.deleted_at is null
     order by e.expense_date desc, e.id desc;
 end;
 $$;
@@ -285,7 +305,7 @@ returns void
 language plpgsql security definer set search_path = public, pg_temp as $$
 begin
   if auth.uid() is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
-  delete from expenses where id = p_expense_id and store_id = p_store_id;
+  update expenses set deleted_at = now() where id = p_expense_id and store_id = p_store_id;
 end;
 $$;
 
@@ -312,6 +332,7 @@ begin
     left join expense_categories ec on ec.id = e.category_id
     where e.store_id = p_store_id
       and e.expense_date between p_from and p_to
+      and e.deleted_at is null
     group by coalesce(ec.name, 'Uncategorized')
     order by sum(e.amount) desc;
 end;

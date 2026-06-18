@@ -187,7 +187,7 @@ begin
       m.min_stock_level,
       m.reorder_level,
       coalesce(sum(b.current_quantity), 0)::int as total_quantity,
-      count(b.id filter (where b.current_quantity > 0))::int as active_batches,
+      (count(b.id) filter (where b.current_quantity > 0))::int as active_batches,
       min(b.expiry_date) filter (where b.current_quantity > 0) as nearest_expiry,
       -- stock_value: flexible-unit aware (both-mode: divide by units_per_pack)
       coalesce(

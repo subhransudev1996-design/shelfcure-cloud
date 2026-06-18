@@ -1,18 +1,23 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   updateOrgSettings,
   updateStoreSettings,
   updateMyProfile,
+  posGetHotkeyGroups,
   DomainError,
+  type PosHotkeyGroup,
 } from '@shelfcure/api-client';
+import { shortcutsByCategory, type ShortcutDef } from '@shelfcure/hotkeys';
 import { getSupabaseBrowserClient } from '../../../lib/supabase/client';
 import { Button } from '../../../components/ui/button';
 import { Field, Alert } from '../../../components/form-fields';
+import { HotkeyManagerModal } from '../sales/new/phase-c-features';
 
-type Tab = 'organization' | 'store' | 'profile';
+type Tab = 'organization' | 'store' | 'hotkeys' | 'shortcuts' | 'team' | 'profile';
 
 interface Props {
   role: string;
@@ -38,6 +43,9 @@ export function SettingsClient({ role, org, store, profile }: Props) {
         {([
           { id: 'organization', label: 'Organization', show: true },
           { id: 'store', label: 'Store', show: !!store },
+          { id: 'hotkeys', label: 'POS Hotkeys', show: !!store },
+          { id: 'shortcuts', label: 'Shortcuts', show: true },
+          { id: 'team', label: 'Users & Roles', show: true },
           { id: 'profile', label: 'My profile', show: true },
         ] as Array<{ id: Tab; label: string; show: boolean }>)
           .filter((t) => t.show)
@@ -77,6 +85,9 @@ export function SettingsClient({ role, org, store, profile }: Props) {
           }}
         />
       )}
+      {tab === 'hotkeys' && store && <HotkeysPanel storeId={store.id} />}
+      {tab === 'shortcuts' && <ShortcutsPanel />}
+      {tab === 'team' && <TeamPanel />}
       {tab === 'profile' && profile && (
         <ProfilePanel
           initial={profile}
@@ -108,6 +119,7 @@ function OrgPanel({
     legal_name: initial?.legal_name ?? '',
     gstin_default: initial?.gstin_default ?? '',
     shared_masters_enabled: !!initial?.shared_masters_enabled,
+    upi_id: initial?.upi_id ?? '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -155,6 +167,14 @@ function OrgPanel({
           maxLength={15}
           placeholder="27AAACS1234A1Z5"
           hint="Stores inherit this when they don't specify their own."
+        />
+        <Field
+          label="Default UPI ID"
+          value={form.upi_id ?? ''}
+          onChange={(e) => setForm({ ...form, upi_id: e.target.value })}
+          disabled={!canEdit}
+          placeholder="pharmacy@upi"
+          hint="Used for the UPI QR on bills when a store doesn't set its own."
         />
         <div className="flex items-end">
           <ReadOnlyBox label="Plan" value={cap(initial?.plan_tier ?? '—')} />
@@ -218,10 +238,17 @@ function StorePanel({
     gst_scheme: (initial.gst_scheme ?? 'regular') as 'regular' | 'composition' | 'unregistered',
     gst_filing_type: (initial.gst_filing_type ?? 'monthly') as 'monthly' | 'quarterly',
     idle_lock_minutes: Number(initial.idle_lock_minutes ?? 10),
+    enable_gst_calculation: initial.enable_gst_calculation ?? true,
+    upi_id: initial.upi_id ?? '',
+    logo_url: initial.logo_url ?? '',
+    near_expiry_alert_days: Number(initial.near_expiry_alert_days ?? 30),
+    low_stock_threshold: Number(initial.low_stock_threshold ?? 10),
   });
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -238,6 +265,27 @@ function StorePanel({
     }
   }
 
+  async function handleLogoUpload(file: File) {
+    setError(null);
+    setUploadingLogo(true);
+    try {
+      if (file.size > 500 * 1024) throw new Error('Logo must be under 500 KB.');
+      const { data: orgRow } = await supabase.from('stores').select('org_id').eq('id', initial.id).single();
+      const orgId = orgRow?.org_id;
+      if (!orgId) throw new Error('Could not resolve organization.');
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `${orgId}/${initial.id}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('store-logos').upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: pub } = supabase.storage.from('store-logos').getPublicUrl(path);
+      setForm((f) => ({ ...f, logo_url: pub.publicUrl }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Logo upload failed');
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
   return (
     <form onSubmit={submit} className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
       <SectionHeader
@@ -248,6 +296,38 @@ function StorePanel({
         }
         subtitle={canEdit ? 'Per-store details printed on bills and used for GST.' : 'Read-only — ask the org owner to update.'}
       />
+
+      {/* Logo uploader */}
+      <div className="flex items-center gap-4 rounded-xl border border-zinc-200 bg-zinc-50/60 p-4">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-zinc-200 bg-white">
+          {form.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={form.logo_url} alt="Store logo" className="h-full w-full object-contain" />
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 text-zinc-300"><path d="M3 16l5-5 4 4 5-5 4 4M3 7h18v14H3V7Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>
+          )}
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-zinc-800">Store logo</p>
+          <p className="text-xs text-zinc-500">Shown in the sidebar header and on printed bills. Max 500 KB.</p>
+          {canEdit && (
+            <label className="mt-2 inline-block cursor-pointer rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50">
+              {uploadingLogo ? 'Uploading…' : 'Upload logo'}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                className="hidden"
+                disabled={uploadingLogo}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleLogoUpload(file);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          )}
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Store name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} disabled={!canEdit} required />
@@ -296,6 +376,58 @@ function StorePanel({
         />
       </div>
 
+      <div className="rounded-xl border border-teal-200 bg-teal-50/40 p-4">
+        <p className="mb-3 text-xs font-bold uppercase tracking-wide text-teal-700">GST configuration</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex cursor-pointer items-start gap-3 sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={form.enable_gst_calculation}
+              onChange={(e) => setForm({ ...form, enable_gst_calculation: e.target.checked })}
+              disabled={!canEdit}
+              className="mt-1 h-4 w-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            <span className="text-sm">
+              <span className="font-medium text-zinc-900">Enable GST calculation</span>
+              <span className="block text-xs text-zinc-500">When off, bills show no GST line regardless of scheme.</span>
+            </span>
+          </label>
+          <Field
+            label="UPI ID"
+            value={form.upi_id}
+            onChange={(e) => setForm({ ...form, upi_id: e.target.value })}
+            disabled={!canEdit}
+            placeholder="store@upi"
+            hint="Renders a scannable UPI QR on printed bills. Leave blank to use the org default."
+          />
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4">
+        <p className="mb-3 text-xs font-bold uppercase tracking-wide text-amber-700">Alert thresholds</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label="Near expiry alert (days)"
+            type="number"
+            min={1}
+            max={365}
+            value={form.near_expiry_alert_days}
+            onChange={(e) => setForm({ ...form, near_expiry_alert_days: parseInt(e.target.value, 10) || 0 })}
+            disabled={!canEdit}
+            hint="Batches expiring within this many days are flagged."
+          />
+          <Field
+            label="Low stock threshold"
+            type="number"
+            min={0}
+            value={form.low_stock_threshold}
+            onChange={(e) => setForm({ ...form, low_stock_threshold: parseInt(e.target.value, 10) || 0 })}
+            disabled={!canEdit}
+            hint="Default minimum stock level for medicines without their own setting."
+          />
+        </div>
+      </div>
+
       {error && <Alert variant="error">{error}</Alert>}
       {success && <Alert variant="success">Store settings saved.</Alert>}
 
@@ -305,6 +437,179 @@ function StorePanel({
         </div>
       )}
     </form>
+  );
+}
+
+// ============================================================================
+// POS Hotkeys panel — reuses the HotkeyManagerModal already shipped in POS,
+// surfaced here as a discoverable Settings entry (desktop parity §2.13.3).
+// ============================================================================
+
+function HotkeysPanel({ storeId }: { storeId: string }) {
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const [groups, setGroups] = useState<PosHotkeyGroup[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+
+  async function refresh() {
+    setLoading(true);
+    try {
+      setGroups(await posGetHotkeyGroups(supabase, storeId));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refresh is redefined each render; only storeId should retrigger the fetch
+  useEffect(() => { refresh(); }, [storeId]);
+
+  const populated = groups.filter((g) => g.items.length > 0);
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <SectionHeader
+        title="POS Hotkeys"
+        subtitle="Alt+1–9 bulk-add named medicine groups at the point of sale (e.g. Alt+1 = “Fever Pack”)."
+      />
+
+      {loading ? (
+        <p className="text-sm text-zinc-400">Loading…</p>
+      ) : populated.length === 0 ? (
+        <p className="text-sm text-zinc-500">No hotkey groups configured yet.</p>
+      ) : (
+        <ul className="grid gap-2 sm:grid-cols-3">
+          {populated.map((g) => (
+            <li key={g.digit} className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
+              <kbd className="rounded bg-slate-800 px-1.5 py-0.5 font-mono text-[10px] font-bold text-white">Alt+{g.digit}</kbd>
+              <p className="mt-1.5 text-sm font-semibold text-zinc-800">{g.name || 'Untitled group'}</p>
+              <p className="text-xs text-zinc-500">{g.items.length} medicine{g.items.length === 1 ? '' : 's'}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex justify-end">
+        <Button type="button" onClick={() => setOpen(true)}>Configure hotkeys</Button>
+      </div>
+
+      <HotkeyManagerModal
+        open={open}
+        onClose={() => setOpen(false)}
+        storeId={storeId}
+        groups={groups}
+        onChange={refresh}
+      />
+    </div>
+  );
+}
+
+// ============================================================================
+// Shortcuts panel — printable reference rendered from the shared registry
+// that also drives the live shortcut bindings (§2.13.6). Single source of
+// truth: packages/hotkeys/src/shortcuts.ts.
+// ============================================================================
+
+function ShortcutsPanel() {
+  const grouped = useMemo(() => shortcutsByCategory(), []);
+
+  function printCheatsheet() {
+    const rows = Object.entries(grouped)
+      .filter(([, defs]) => defs.length > 0)
+      .map(([category, defs]: [string, ShortcutDef[]]) => `
+        <h2>${category}</h2>
+        <table>
+          ${defs.filter((d) => !d.hide).map((d) => `
+            <tr>
+              <td class="keys">${Array.isArray(d.keys) ? d.keys.join(' / ') : d.keys}</td>
+              <td>${d.label}${d.planned ? ' <em>(coming soon)</em>' : ''}</td>
+            </tr>
+          `).join('')}
+        </table>
+      `).join('');
+
+    const html = `<!doctype html><html><head><title>ShelfCure Shortcuts</title><style>
+      body { font-family: system-ui, sans-serif; padding: 24px; color: #18181b; }
+      h1 { margin-bottom: 4px; }
+      h2 { margin-top: 24px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #71717a; }
+      table { width: 100%; border-collapse: collapse; }
+      td { padding: 6px 8px; border-bottom: 1px solid #e4e4e7; font-size: 13px; }
+      .keys { font-family: monospace; font-weight: bold; width: 140px; }
+      em { color: #a1a1aa; font-style: italic; }
+    </style></head><body>
+      <h1>Keyboard Shortcuts</h1>
+      <p>ShelfCure Cloud — printed reference</p>
+      ${rows}
+    </body></html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(html);
+      doc.close();
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    }
+    setTimeout(() => document.body.removeChild(iframe), 1000);
+  }
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+        <SectionHeader title="Keyboard Shortcuts" subtitle="Every shortcut available across ShelfCure Cloud, grouped by area." />
+        <Button type="button" variant="secondary" onClick={printCheatsheet}>Print cheatsheet</Button>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        {Object.entries(grouped)
+          .filter(([, defs]) => defs.length > 0)
+          .map(([category, defs]) => (
+            <div key={category}>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-zinc-400">{category}</p>
+              <ul className="space-y-1.5">
+                {defs.filter((d) => !d.hide).map((d, i) => (
+                  <li key={i} className="flex items-center justify-between gap-3 text-sm">
+                    <span className={d.planned ? 'text-zinc-400' : 'text-zinc-700'}>
+                      {d.label}
+                      {d.planned && <span className="ml-1.5 text-[10px] italic text-zinc-400">(coming soon)</span>}
+                    </span>
+                    <kbd className="shrink-0 rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-zinc-600">
+                      {Array.isArray(d.keys) ? d.keys.join(' / ') : d.keys}
+                    </kbd>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Team panel — deep-links to the existing Staff page rather than duplicating
+// its table (§2.13.5).
+// ============================================================================
+
+function TeamPanel() {
+  return (
+    <div className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <SectionHeader
+        title="Users & Roles"
+        subtitle="Manage who has access to this organization and what they can do."
+      />
+      <div className="flex items-center justify-between rounded-xl border border-zinc-200 bg-zinc-50/60 p-4">
+        <div>
+          <p className="text-sm font-medium text-zinc-900">Staff directory</p>
+          <p className="text-xs text-zinc-500">Add teammates, assign roles, and manage store access from the dedicated Staff page.</p>
+        </div>
+        <Link href="/dashboard/staff">
+          <Button type="button" variant="secondary">Manage staff →</Button>
+        </Link>
+      </div>
+    </div>
   );
 }
 
