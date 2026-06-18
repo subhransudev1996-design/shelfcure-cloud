@@ -4222,6 +4222,10 @@ export type Database = {
         Args: { p_store_id: string; p_period_type?: string }
         Returns: Json
       }
+      rpc_report_stock_movement: {
+        Args: { p_store_id: string; p_from: string; p_to: string }
+        Returns: Json
+      }
       rpc_report_gst_summary: {
         Args: { p_from?: string; p_store_id: string; p_to?: string }
         Returns: {

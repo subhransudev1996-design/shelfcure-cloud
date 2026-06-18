@@ -586,3 +586,47 @@ export async function reportGrowthTrend(
   if (error) throw mapSupabaseError(error);
   return data as unknown as GrowthTrendReport;
 }
+
+export interface StockMovementRow {
+  medicine_id: string;
+  name: string;
+  manufacturer: string | null;
+  sale_unit_mode: string;
+  units_per_pack: number;
+  pack_unit: string;
+  current_stock: number;
+  purchased_in: number;
+  purchased_value: number;
+  sale_returned_in: number;
+  sold_out: number;
+  sold_value: number;
+  purchase_returned_out: number;
+  net_change: number;
+}
+
+export interface StockMovementReport {
+  period: { from: string; to: string };
+  summary: {
+    qty_in: number;
+    qty_out: number;
+    net_change: number;
+    skus_moved: number;
+    dormant_in_stock: number;
+  };
+  rows: StockMovementRow[];
+}
+
+export async function reportStockMovement(
+  client: Client,
+  storeId: string,
+  from: string,
+  to: string,
+): Promise<StockMovementReport> {
+  const { data, error } = await client.rpc('rpc_report_stock_movement', {
+    p_store_id: storeId,
+    p_from: from,
+    p_to: to,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as StockMovementReport;
+}
