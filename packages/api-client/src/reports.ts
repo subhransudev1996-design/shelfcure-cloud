@@ -262,3 +262,65 @@ export async function reportDaily(
   if (error) throw mapSupabaseError(error);
   return data as unknown as DailyReportData;
 }
+
+// ── §2.11.1 Overall Performance ───────────────────────────────────────────────
+
+export type PerfPeriodType = 'today' | 'week' | 'month' | 'quarter' | '30d' | 'all';
+
+export interface GrowthKpi<T = number> {
+  current: T;
+  previous: T;
+  delta_abs: T;
+  delta_pct: number;
+}
+
+export interface OverallPerformanceReport {
+  period: {
+    type: PerfPeriodType;
+    current_from: string;
+    current_to: string;
+    previous_from: string | null;
+    previous_to: string | null;
+  };
+  kpis: {
+    revenue: GrowthKpi;
+    bills: GrowthKpi;
+    avg_bill_value: GrowthKpi;
+    items_sold: GrowthKpi;
+    active_customers: GrowthKpi;
+    new_customers: GrowthKpi;
+    gross_profit: GrowthKpi;
+    net_profit: GrowthKpi;
+    gross_margin_pct: GrowthKpi;
+    net_margin_pct: GrowthKpi;
+  };
+  inventory: {
+    total_skus: number;
+    stock_value: number;
+    low_stock_count: number;
+    near_expiry_count: number;
+    expired_count: number;
+    dormant_skus: number;
+  };
+  credit: {
+    total_outstanding: number;
+    customers_with_balance: number;
+    aging_0_30: number;
+    aging_31_60: number;
+    aging_61_90: number;
+    aging_90_plus: number;
+  };
+}
+
+export async function reportOverallPerformance(
+  client: Client,
+  storeId: string,
+  periodType: PerfPeriodType = 'month',
+): Promise<OverallPerformanceReport> {
+  const { data, error } = await client.rpc('rpc_report_overall_performance', {
+    p_store_id: storeId,
+    p_period_type: periodType,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as OverallPerformanceReport;
+}
