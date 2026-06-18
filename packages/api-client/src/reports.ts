@@ -533,3 +533,56 @@ export async function reportHourly(
   if (error) throw mapSupabaseError(error);
   return data as unknown as HourlyReport;
 }
+
+export interface GrowthTrendMonth {
+  label: string;
+  period_start: string;
+  period_end: string;
+  revenue: number;
+  bills: number;
+}
+
+export interface GrowthTrendMedicineRow {
+  medicine_id: string;
+  name: string;
+  manufacturer: string | null;
+  cur_rev: number;
+  prev_rev: number;
+  cur_qty: number;
+  prev_qty: number;
+  rev_delta: number;
+}
+
+export interface GrowthTrendReport {
+  period: {
+    current_from: string;
+    current_to: string;
+    previous_from: string | null;
+    previous_to: string | null;
+  };
+  kpis: {
+    revenue: GrowthKpi;
+    bills: GrowthKpi;
+    avg_bill_value: GrowthKpi;
+    items_sold: GrowthKpi;
+    active_customers: GrowthKpi;
+    new_customers: GrowthKpi;
+    gross_profit: GrowthKpi;
+  };
+  trend: GrowthTrendMonth[];
+  growers: GrowthTrendMedicineRow[];
+  decliners: GrowthTrendMedicineRow[];
+}
+
+export async function reportGrowthTrend(
+  client: Client,
+  storeId: string,
+  periodType: PerfPeriodType,
+): Promise<GrowthTrendReport> {
+  const { data, error } = await client.rpc('rpc_report_growth_trend', {
+    p_store_id: storeId,
+    p_period_type: periodType,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as GrowthTrendReport;
+}
