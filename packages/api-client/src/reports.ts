@@ -450,3 +450,43 @@ export async function reportCashCredit(
   if (error) throw mapSupabaseError(error);
   return data as unknown as CashCreditReport;
 }
+
+export interface DailyCollectionRow {
+  date: string;
+  cash: number;
+  upi: number;
+  card: number;
+  other: number;
+  credit_pending: number;
+  total_collected: number;
+  bill_count: number;
+}
+
+export interface DailyCollectionReport {
+  period: { from: string; to: string };
+  rows: DailyCollectionRow[];
+  totals: {
+    total_cash: number;
+    total_upi: number;
+    total_card: number;
+    total_other: number;
+    total_credit_pending: number;
+    total_collected: number;
+    total_bills: number;
+  };
+}
+
+export async function reportDailyCollection(
+  client: Client,
+  storeId: string,
+  from: string,
+  to: string,
+): Promise<DailyCollectionReport> {
+  const { data, error } = await client.rpc('rpc_report_daily_collection', {
+    p_store_id: storeId,
+    p_from: from,
+    p_to: to,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as DailyCollectionReport;
+}
