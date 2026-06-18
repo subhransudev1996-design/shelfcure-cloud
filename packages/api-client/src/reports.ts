@@ -386,3 +386,67 @@ export async function reportProfitTracking(
   if (error) throw mapSupabaseError(error);
   return data as unknown as ProfitTrackingReport;
 }
+
+export interface CashCreditDailyRow {
+  day: string;
+  cash_amount: number;
+  cash_count: number;
+  credit_amount: number;
+  credit_count: number;
+}
+
+export interface CashCreditDebtorRow {
+  customer_id: string;
+  customer: string;
+  phone: string | null;
+  outstanding: number;
+  last_sale_date: string | null;
+  days_since_last_sale: number | null;
+}
+
+export interface CashCreditBillRow {
+  sale_id: string;
+  bill_number: string;
+  bill_date: string;
+  customer: string;
+  total: number;
+  paid: number;
+  balance: number;
+  payment_status: string;
+}
+
+export interface CashCreditReport {
+  period: { from: string; to: string };
+  cash_sales_amount: number;
+  cash_sales_count: number;
+  credit_sales_total: number;
+  credit_sales_count: number;
+  credit_unpaid_portion: number;
+  credit_collected: number;
+  snapshot: {
+    total_outstanding: number;
+    customers_with_balance: number;
+    aging_0_30: number;
+    aging_31_60: number;
+    aging_61_90: number;
+    aging_90_plus: number;
+  };
+  daily: CashCreditDailyRow[];
+  top_debtors: CashCreditDebtorRow[];
+  credit_bills: CashCreditBillRow[];
+}
+
+export async function reportCashCredit(
+  client: Client,
+  storeId: string,
+  from: string,
+  to: string,
+): Promise<CashCreditReport> {
+  const { data, error } = await client.rpc('rpc_report_cash_credit', {
+    p_store_id: storeId,
+    p_from: from,
+    p_to: to,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as CashCreditReport;
+}
