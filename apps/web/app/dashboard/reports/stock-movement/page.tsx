@@ -14,7 +14,10 @@ function stockDisplay(r: StockMovementRow) {
   if (r.sale_unit_mode === 'both' && r.units_per_pack > 1) {
     return `${r.current_stock} u (${(r.current_stock / r.units_per_pack).toFixed(1)} ${r.pack_unit})`;
   }
-  return `${r.current_stock} ${r.sale_unit_mode === 'pack' ? r.pack_unit : 'units'}`;
+  if (r.sale_unit_mode === 'pack_only') {
+    return `${r.current_stock} ${r.pack_unit}`;
+  }
+  return `${r.current_stock} units`;
 }
 
 function presetRange(preset: string): { from: string; to: string } {

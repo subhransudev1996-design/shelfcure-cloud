@@ -12,10 +12,13 @@ function fmtDate(d: string | null) {
 }
 
 function stockDisplay(r: StockSummaryRow) {
-  if (r.sale_unit_mode === 'both') {
+  if (r.sale_unit_mode === 'both' && r.units_per_pack > 1) {
     return `${r.total_quantity} u (${(r.total_quantity / r.units_per_pack).toFixed(1)} ${r.pack_unit})`;
   }
-  return `${r.total_quantity} ${r.sale_unit_mode === 'pack' ? r.pack_unit : 'units'}`;
+  if (r.sale_unit_mode === 'pack_only') {
+    return `${r.total_quantity} ${r.pack_unit}`;
+  }
+  return `${r.total_quantity} units`;
 }
 
 export default async function StockReportPage() {

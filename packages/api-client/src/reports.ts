@@ -630,3 +630,49 @@ export async function reportStockMovement(
   if (error) throw mapSupabaseError(error);
   return data as unknown as StockMovementReport;
 }
+
+export type VelocityClassification = 'fast' | 'steady' | 'slow' | 'dead';
+
+export interface StockVelocityRow {
+  medicine_id: string;
+  name: string;
+  manufacturer: string | null;
+  sale_unit_mode: string;
+  units_per_pack: number | null;
+  pack_unit: string;
+  current_stock: number;
+  stock_value: number;
+  sold_in_window: number;
+  sold_30d: number;
+  velocity_per_day: number;
+  days_of_cover: number | null;
+  days_since_last_sale: number | null;
+  classification: VelocityClassification;
+}
+
+export interface StockVelocityReport {
+  window_days: number;
+  summary: {
+    total_skus: number;
+    fast_count: number;
+    steady_count: number;
+    slow_count: number;
+    dead_count: number;
+    stock_value_at_risk: number;
+    total_stock_value: number;
+  };
+  rows: StockVelocityRow[];
+}
+
+export async function reportStockVelocity(
+  client: Client,
+  storeId: string,
+  windowDays: number,
+): Promise<StockVelocityReport> {
+  const { data, error } = await client.rpc('rpc_report_stock_velocity', {
+    p_store_id: storeId,
+    p_window_days: windowDays,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as StockVelocityReport;
+}
