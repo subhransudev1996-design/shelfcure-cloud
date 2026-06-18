@@ -17,12 +17,22 @@ interface Props {
   data: ChartDataPoint[];
 }
 
-const FORMAT = new Intl.NumberFormat('en-IN', {
-  style: 'currency',
-  currency: 'INR',
-  notation: 'compact',
-  maximumFractionDigits: 1,
-});
+// Intl.NumberFormat's `notation: 'compact'` rounds differently between Node's
+// ICU (SSR) and the browser's ICU (hydration) — e.g. ₹0 vs ₹0.0 — causing a
+// hydration mismatch. Format compactly by hand instead, which is deterministic.
+function formatCompactINR(value: number): string {
+  const sign = value < 0 ? '-' : '';
+  const n = Math.abs(value);
+  const fmt = (v: number, divisor: number, suffix: string) => {
+    const scaled = v / divisor;
+    const rounded = Math.round(scaled * 10) / 10;
+    return `${sign}₹${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1)}${suffix}`;
+  };
+  if (n >= 1_00_00_000) return fmt(n, 1_00_00_000, 'Cr');
+  if (n >= 1_00_000) return fmt(n, 1_00_000, 'L');
+  if (n >= 1_000) return fmt(n, 1_000, 'K');
+  return `${sign}₹${Math.round(n)}`;
+}
 
 function labelDay(iso: string) {
   const d = new Date(iso + 'T00:00:00');
@@ -47,11 +57,11 @@ export function DashboardChartCard({ data }: Props) {
           </div>
           <div className="mt-0.5 flex items-baseline gap-3">
             <span className="font-mono text-lg font-bold text-emerald-700">
-              {FORMAT.format(totalSales)}
+              {formatCompactINR(totalSales)}
             </span>
             <span className="text-[10px] text-zinc-400">sales</span>
             <span className="font-mono text-lg font-bold text-blue-700">
-              {FORMAT.format(totalPurchases)}
+              {formatCompactINR(totalPurchases)}
             </span>
             <span className="text-[10px] text-zinc-400">purchases</span>
           </div>
@@ -90,7 +100,7 @@ export function DashboardChartCard({ data }: Props) {
               interval="preserveStartEnd"
             />
             <YAxis
-              tickFormatter={(v: number) => FORMAT.format(v)}
+              tickFormatter={(v: number) => formatCompactINR(v)}
               tick={{ fontSize: 9, fill: '#a1a1aa' }}
               axisLine={false}
               tickLine={false}
@@ -106,7 +116,7 @@ export function DashboardChartCard({ data }: Props) {
                 boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
               }}
               formatter={(value, name) => [
-                FORMAT.format(Number(value)),
+                formatCompactINR(Number(value)),
                 String(name).charAt(0).toUpperCase() + String(name).slice(1),
               ]}
               labelStyle={{ fontWeight: 600, marginBottom: 4, color: '#18181b' }}
