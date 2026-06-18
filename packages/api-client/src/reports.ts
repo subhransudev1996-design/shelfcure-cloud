@@ -490,3 +490,46 @@ export async function reportDailyCollection(
   if (error) throw mapSupabaseError(error);
   return data as unknown as DailyCollectionReport;
 }
+
+export interface HourlyBucket {
+  hour: number;
+  bill_count: number;
+  revenue: number;
+  items_sold: number;
+}
+
+export interface HourlyHeatmapCell {
+  date: string;
+  hour: number;
+  revenue: number;
+  bill_count: number;
+}
+
+export interface HourlyReport {
+  period: { from: string; to: string };
+  hourly: HourlyBucket[];
+  heatmap: HourlyHeatmapCell[];
+  summary: {
+    total_bills: number;
+    total_revenue: number;
+    total_items: number;
+    peak_hour: number;
+    peak_hour_revenue: number;
+    avg_bills_per_active_hour: number;
+  };
+}
+
+export async function reportHourly(
+  client: Client,
+  storeId: string,
+  from: string,
+  to: string,
+): Promise<HourlyReport> {
+  const { data, error } = await client.rpc('rpc_report_hourly', {
+    p_store_id: storeId,
+    p_from: from,
+    p_to: to,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as HourlyReport;
+}
