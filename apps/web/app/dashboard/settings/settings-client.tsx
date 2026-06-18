@@ -119,7 +119,7 @@ function OrgPanel({
     legal_name: initial?.legal_name ?? '',
     gstin_default: initial?.gstin_default ?? '',
     shared_masters_enabled: !!initial?.shared_masters_enabled,
-    upi_id: initial?.upi_id ?? '',
+    upi_vpa: initial?.upi_vpa ?? '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -170,8 +170,8 @@ function OrgPanel({
         />
         <Field
           label="Default UPI ID"
-          value={form.upi_id ?? ''}
-          onChange={(e) => setForm({ ...form, upi_id: e.target.value })}
+          value={form.upi_vpa ?? ''}
+          onChange={(e) => setForm({ ...form, upi_vpa: e.target.value })}
           disabled={!canEdit}
           placeholder="pharmacy@upi"
           hint="Used for the UPI QR on bills when a store doesn't set its own."
@@ -239,7 +239,7 @@ function StorePanel({
     gst_filing_type: (initial.gst_filing_type ?? 'monthly') as 'monthly' | 'quarterly',
     idle_lock_minutes: Number(initial.idle_lock_minutes ?? 10),
     enable_gst_calculation: initial.enable_gst_calculation ?? true,
-    upi_id: initial.upi_id ?? '',
+    upi_vpa: initial.upi_vpa ?? '',
     logo_url: initial.logo_url ?? '',
     near_expiry_alert_days: Number(initial.near_expiry_alert_days ?? 30),
     low_stock_threshold: Number(initial.low_stock_threshold ?? 10),
@@ -394,8 +394,8 @@ function StorePanel({
           </label>
           <Field
             label="UPI ID"
-            value={form.upi_id}
-            onChange={(e) => setForm({ ...form, upi_id: e.target.value })}
+            value={form.upi_vpa}
+            onChange={(e) => setForm({ ...form, upi_vpa: e.target.value })}
             disabled={!canEdit}
             placeholder="store@upi"
             hint="Renders a scannable UPI QR on printed bills. Leave blank to use the org default."

@@ -9,7 +9,7 @@ export interface UpdateOrgInput {
   legal_name?: string | null;
   gstin_default?: string | null;
   shared_masters_enabled?: boolean;
-  upi_id?: string | null;
+  upi_vpa?: string | null;
 }
 
 export async function updateOrgSettings(client: Client, input: UpdateOrgInput) {
@@ -18,7 +18,7 @@ export async function updateOrgSettings(client: Client, input: UpdateOrgInput) {
   if (input.legal_name !== undefined) payload.legal_name = input.legal_name?.trim() ?? null;
   if (input.gstin_default !== undefined) payload.gstin_default = input.gstin_default?.trim().toUpperCase() || null;
   if (input.shared_masters_enabled !== undefined) payload.shared_masters_enabled = input.shared_masters_enabled;
-  if (input.upi_id !== undefined) payload.upi_id = input.upi_id?.trim() || null;
+  if (input.upi_vpa !== undefined) payload.upi_vpa = input.upi_vpa?.trim() || null;
 
   const { data, error } = await client.rpc('rpc_update_org_settings', { p_payload: payload as never });
   if (error) throw mapSupabaseError(error);
@@ -41,7 +41,7 @@ export interface UpdateStoreInput {
   idle_lock_minutes?: number;
   is_active?: boolean;
   enable_gst_calculation?: boolean;
-  upi_id?: string | null;
+  upi_vpa?: string | null;
   logo_url?: string | null;
   near_expiry_alert_days?: number;
   low_stock_threshold?: number;
