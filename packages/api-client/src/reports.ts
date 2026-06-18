@@ -155,6 +155,7 @@ export type GstMonthlyReport = {
   period: { month: number; year: number; from: string; to: string };
   output: {
     taxable: number; cgst: number; sgst: number; igst: number; total_gst: number;
+    b2b_taxable: number; b2c_taxable: number;
     slabs: Array<{ gst_rate: number; transactions: number; taxable_amount: number; cgst: number; sgst: number; igst: number; total_gst: number }>;
   };
   input: {
@@ -183,6 +184,38 @@ export async function reportGstMonthly(
   });
   if (error) throw mapSupabaseError(error);
   return data as unknown as GstMonthlyReport;
+}
+
+export interface GstAnnualMonthRow {
+  month: string;
+  out_total_gst: number;
+  in_total_gst: number;
+  net_payable: number;
+}
+
+export interface GstAnnualReport {
+  fin_year: number;
+  period: { from: string; to: string };
+  out_taxable: number; out_cgst: number; out_sgst: number; out_igst: number; out_total_gst: number;
+  out_b2b_taxable: number; out_b2c_taxable: number;
+  in_taxable: number; in_cgst: number; in_sgst: number; in_igst: number; in_total_gst: number;
+  sr_gst: number; sr_taxable: number;
+  pr_gst: number; pr_taxable: number;
+  net_output_gst: number; net_itc: number; net_payable: number;
+  monthly_rows: GstAnnualMonthRow[];
+}
+
+export async function reportGstAnnual(
+  client: Client,
+  storeId: string,
+  finYear: number,
+): Promise<GstAnnualReport> {
+  const { data, error } = await client.rpc('rpc_report_gst_annual', {
+    p_store_id: storeId,
+    p_fin_year: finYear,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as GstAnnualReport;
 }
 
 export type DoctorReportData = {

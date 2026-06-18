@@ -4190,6 +4190,10 @@ export type Database = {
         Args: { p_store_id: string; p_month: number; p_year: number }
         Returns: Json
       }
+      rpc_report_gst_annual: {
+        Args: { p_store_id: string; p_fin_year: number }
+        Returns: Json
+      }
       rpc_report_doctors: {
         Args: { p_store_id: string; p_from?: string | null; p_to?: string | null }
         Returns: Json

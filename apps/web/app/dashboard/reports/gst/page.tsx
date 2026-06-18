@@ -121,6 +121,18 @@ export default async function GstReportPage({
             ))}
           </div>
 
+          {/* B2B / B2C split */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">B2B Sales (GSTIN)</p>
+              <p className="mt-1 text-lg font-black tabular-nums text-zinc-900">{INR(data.output.b2b_taxable)}</p>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">B2C Sales</p>
+              <p className="mt-1 text-lg font-black tabular-nums text-zinc-900">{INR(data.output.b2c_taxable)}</p>
+            </div>
+          </div>
+
           {/* Net payable reconciliation */}
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
             <h3 className="mb-4 text-xs font-black uppercase tracking-widest text-zinc-500">Reconciliation</h3>
