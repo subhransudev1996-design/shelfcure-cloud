@@ -324,3 +324,65 @@ export async function reportOverallPerformance(
   if (error) throw mapSupabaseError(error);
   return data as unknown as OverallPerformanceReport;
 }
+
+// ── §2.11.3 Profit Tracking ───────────────────────────────────────────────────
+
+export interface ProfitDailyRow {
+  day: string;
+  bills: number;
+  revenue: number;
+  cogs: number;
+  gross_profit: number;
+}
+
+export interface ProfitManufacturerRow {
+  manufacturer: string;
+  skus: number;
+  revenue: number;
+  cogs: number;
+  profit: number;
+  margin_pct: number;
+}
+
+export interface ProfitTrackingReport {
+  period: {
+    from: string;
+    to: string;
+    days: number;
+    previous_from: string;
+    previous_to: string;
+  };
+  kpis: {
+    net_sales: GrowthKpi;
+    bills: GrowthKpi;
+    gross_profit: GrowthKpi;
+    net_profit: GrowthKpi;
+    gross_margin_pct: GrowthKpi;
+    net_margin_pct: GrowthKpi;
+  };
+  gross_sales: number;
+  returns_total: number;
+  revenue: number;
+  cogs: number;
+  bill_discounts: number;
+  expenses_total: number;
+  avg_profit_per_day: number;
+  daily: ProfitDailyRow[];
+  top_earners: ProfitManufacturerRow[];
+  loss_makers: ProfitManufacturerRow[];
+}
+
+export async function reportProfitTracking(
+  client: Client,
+  storeId: string,
+  from: string,
+  to: string,
+): Promise<ProfitTrackingReport> {
+  const { data, error } = await client.rpc('rpc_report_profit_tracking', {
+    p_store_id: storeId,
+    p_from: from,
+    p_to: to,
+  });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as ProfitTrackingReport;
+}
