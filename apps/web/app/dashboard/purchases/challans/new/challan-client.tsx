@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   posSearchMedicines,
@@ -200,9 +201,9 @@ export function ChallanClient({ storeId, initialSuppliers }: Props) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
         <h1 className="text-2xl font-semibold text-zinc-900">Add a supplier first</h1>
-        <a href="/dashboard/suppliers" className="mt-6 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+        <Link href="/dashboard/suppliers" className="mt-6 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
           Go to Suppliers
-        </a>
+        </Link>
       </div>
     );
   }
