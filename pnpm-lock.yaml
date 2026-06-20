@@ -33,6 +33,116 @@ importers:
         specifier: ^8.15.0
         version: 8.59.4(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
 
+  apps/admin:
+    dependencies:
+      '@shelfcure/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
+      '@shelfcure/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@shelfcure/db-types':
+        specifier: workspace:*
+        version: link:../../packages/db-types
+      '@supabase/ssr':
+        specifier: ^0.10.3
+        version: 0.10.3(@supabase/supabase-js@2.106.1)
+      '@supabase/supabase-js':
+        specifier: ^2.106.1
+        version: 2.106.1
+      next:
+        specifier: ^15.0.0
+        version: 15.5.18(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.6(react@19.2.6)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.3.0
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.41
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.15
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.15)
+      eslint:
+        specifier: ^9.15.0
+        version: 9.39.4(jiti@2.7.0)
+      eslint-config-next:
+        specifier: ^15.0.0
+        version: 15.5.18(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
+      postcss:
+        specifier: ^8.5.15
+        version: 8.5.15
+      tailwindcss:
+        specifier: ^4
+        version: 4.3.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  apps/console:
+    dependencies:
+      '@shelfcure/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
+      '@shelfcure/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@shelfcure/db-types':
+        specifier: workspace:*
+        version: link:../../packages/db-types
+      '@supabase/ssr':
+        specifier: ^0.10.3
+        version: 0.10.3(@supabase/supabase-js@2.106.1)
+      '@supabase/supabase-js':
+        specifier: ^2.106.1
+        version: 2.106.1
+      next:
+        specifier: ^15.0.0
+        version: 15.5.18(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.6(react@19.2.6)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.3.0
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.41
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.15
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.15)
+      eslint:
+        specifier: ^9.15.0
+        version: 9.39.4(jiti@2.7.0)
+      eslint-config-next:
+        specifier: ^15.0.0
+        version: 15.5.18(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
+      postcss:
+        specifier: ^8.5.15
+        version: 8.5.15
+      tailwindcss:
+        specifier: ^4
+        version: 4.3.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
   apps/desktop:
     dependencies:
       '@shelfcure/api-client':
@@ -127,6 +237,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.3(@types/react@19.2.15)
+      agentation:
+        specifier: ^3.0.2
+        version: 3.0.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       eslint:
         specifier: ^9.15.0
         version: 9.39.4(jiti@2.7.0)
@@ -1422,6 +1535,17 @@ packages:
     resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  agentation@3.0.2:
+    resolution: {integrity: sha512-iGzBxFVTuZEIKzLY6AExSLAQH6i6SwxV4pAu7v7m3X6bInZ7qlZXAwrEqyc4+EfP4gM7z2RXBF6SF4DeH0f2lA==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   ajv@6.15.0:
     resolution: {integrity: sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw==}
@@ -3996,6 +4120,11 @@ snapshots:
       acorn: 8.16.0
 
   acorn@8.16.0: {}
+
+  agentation@3.0.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
+    optionalDependencies:
+      react: 19.2.6
+      react-dom: 19.2.6(react@19.2.6)
 
   ajv@6.15.0:
     dependencies:

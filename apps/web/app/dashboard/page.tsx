@@ -265,7 +265,6 @@ export default async function DashboardOverviewPage() {
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <QuickLink href="/dashboard/staff" label="Staff" />
-              <QuickLink href="/dashboard/stores" label="Stores" />
               <QuickLink href="/dashboard/suppliers" label="Suppliers" />
               <QuickLink href="/dashboard/medicines" label="Medicines" />
             </div>

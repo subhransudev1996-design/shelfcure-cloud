@@ -34,3 +34,6 @@ export * from './purchase-orders';
 export * from './purchases';
 export * from './challans';
 export * from './finance';
+export * from './payroll';
+export * from './console';
+export * from './org-access';

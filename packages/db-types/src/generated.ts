@@ -1511,44 +1511,121 @@ export type Database = {
       organizations: {
         Row: {
           billing_status: string
+          billing_tier_id: string | null
           created_at: string
           gstin_default: string | null
           id: string
+          is_suspended: boolean
           legal_name: string | null
           name: string
           plan_tier: string
           razorpay_customer_id: string | null
           razorpay_subscription_id: string | null
           shared_masters_enabled: boolean
+          suspended_at: string | null
           trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
           billing_status?: string
+          billing_tier_id?: string | null
           created_at?: string
           gstin_default?: string | null
           id?: string
+          is_suspended?: boolean
           legal_name?: string | null
           name: string
           plan_tier?: string
           razorpay_customer_id?: string | null
           razorpay_subscription_id?: string | null
           shared_masters_enabled?: boolean
+          suspended_at?: string | null
           trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
           billing_status?: string
+          billing_tier_id?: string | null
           created_at?: string
           gstin_default?: string | null
           id?: string
+          is_suspended?: boolean
           legal_name?: string | null
           name?: string
           plan_tier?: string
           razorpay_customer_id?: string | null
           razorpay_subscription_id?: string | null
           shared_masters_enabled?: boolean
+          suspended_at?: string | null
           trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizations_billing_tier_id_fkey"
+            columns: ["billing_tier_id"]
+            isOneToOne: false
+            referencedRelation: "billing_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_tiers: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string
+          is_active: boolean
+          is_default: boolean
+          sort_order: number
+          trial_days: number
+          monthly_price_paise: number | null
+          yearly_price_paise: number | null
+          razorpay_plan_id_monthly: string | null
+          razorpay_plan_id_yearly: string | null
+          max_stores: number | null
+          max_staff: number | null
+          features: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string
+          is_active?: boolean
+          is_default?: boolean
+          sort_order?: number
+          trial_days?: number
+          monthly_price_paise?: number | null
+          yearly_price_paise?: number | null
+          razorpay_plan_id_monthly?: string | null
+          razorpay_plan_id_yearly?: string | null
+          max_stores?: number | null
+          max_staff?: number | null
+          features?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string
+          is_active?: boolean
+          is_default?: boolean
+          sort_order?: number
+          trial_days?: number
+          monthly_price_paise?: number | null
+          yearly_price_paise?: number | null
+          razorpay_plan_id_monthly?: string | null
+          razorpay_plan_id_yearly?: string | null
+          max_stores?: number | null
+          max_staff?: number | null
+          features?: Json
+          created_at?: string
           updated_at?: string
         }
         Relationships: []
@@ -3190,6 +3267,7 @@ export type Database = {
           id: string
           is_active: boolean
           last_login_at: string | null
+          monthly_salary: number | null
           org_id: string
           phone: string | null
           pin_hash: string | null
@@ -3205,6 +3283,7 @@ export type Database = {
           id: string
           is_active?: boolean
           last_login_at?: string | null
+          monthly_salary?: number | null
           org_id: string
           phone?: string | null
           pin_hash?: string | null
@@ -3220,6 +3299,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_login_at?: string | null
+          monthly_salary?: number | null
           org_id?: string
           phone?: string | null
           pin_hash?: string | null
@@ -3895,11 +3975,28 @@ export type Database = {
           id: string
           is_active: boolean
           last_login_at: string
+          monthly_salary: number
           phone: string
           role: string
           store_code: string
           store_id: string
           store_name: string
+        }[]
+      }
+      rpc_list_salary_payments: {
+        Args: { p_limit?: number }
+        Returns: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string
+          paid_by_name: string
+          payment_date: string
+          payment_method: string
+          role: string
+          staff_name: string
+          store_code: string
+          user_profile_id: string
         }[]
       }
       rpc_list_stock_batches: {
@@ -4313,6 +4410,19 @@ export type Database = {
       rpc_update_my_profile: { Args: { p_payload: Json }; Returns: Json }
       rpc_update_org_settings: { Args: { p_payload: Json }; Returns: Json }
       rpc_update_purchase_return: { Args: { p_payload: Json }; Returns: undefined }
+      rpc_record_salary_payment: {
+        Args: {
+          p_amount: number
+          p_client_uuid?: string | null
+          p_notes?: string | null
+          p_payment_date: string
+          p_payment_method?: string
+          p_store_id?: string | null
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      rpc_update_staff: { Args: { p_payload: Json; p_user_id: string }; Returns: Json }
       rpc_update_store_settings: {
         Args: { p_payload: Json; p_store_id: string }
         Returns: Json
@@ -4322,6 +4432,143 @@ export type Database = {
         Returns: string
       }
       rpc_whoami: { Args: never; Returns: Json }
+      is_platform_admin: { Args: never; Returns: boolean }
+      rpc_console_list_orgs: {
+        Args: never
+        Returns: {
+          billing_status: string
+          billing_tier_id: string | null
+          billing_tier_name: string | null
+          created_at: string
+          id: string
+          is_suspended: boolean
+          legal_name: string
+          name: string
+          plan_tier: string
+          staff_count: number
+          store_count: number
+          suspended_at: string | null
+          trial_ends_at: string
+        }[]
+      }
+      rpc_console_get_org_detail: {
+        Args: { p_org_id: string }
+        Returns: Json
+      }
+      rpc_console_set_org_suspended: {
+        Args: { p_org_id: string; p_suspended: boolean }
+        Returns: Json
+      }
+      rpc_console_delete_organization: {
+        Args: { p_confirm_name: string; p_org_id: string }
+        Returns: Json
+      }
+      rpc_check_org_access: { Args: never; Returns: Json }
+      rpc_console_list_platform_admins: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+        }[]
+      }
+      rpc_console_finalize_platform_admin: {
+        Args: { p_email: string; p_full_name: string; p_user_id: string }
+        Returns: { email: string; full_name: string; id: string }[]
+      }
+      rpc_console_whoami: { Args: never; Returns: Json }
+      rpc_console_create_org: {
+        Args: {
+          p_billing_tier_id?: string | null
+          p_org_name: string
+          p_owner_email: string
+          p_owner_full_name: string
+          p_owner_phone?: string | null
+          p_owner_user_id: string
+          p_trial_days?: number | null
+        }
+        Returns: Json
+      }
+      rpc_console_update_org_license: {
+        Args: { p_org_id: string; p_payload: Json }
+        Returns: Json
+      }
+      rpc_console_list_billing_tiers: {
+        Args: never
+        Returns: {
+          id: string
+          name: string
+          slug: string
+          description: string
+          is_active: boolean
+          is_default: boolean
+          sort_order: number
+          trial_days: number
+          monthly_price_paise: number | null
+          yearly_price_paise: number | null
+          razorpay_plan_id_monthly: string | null
+          razorpay_plan_id_yearly: string | null
+          max_stores: number | null
+          max_staff: number | null
+          features: Json
+          org_count: number
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      rpc_console_create_billing_tier: {
+        Args: { p_payload: Json }
+        Returns: Json
+      }
+      rpc_console_update_billing_tier: {
+        Args: { p_tier_id: string; p_payload: Json }
+        Returns: Json
+      }
+      rpc_console_delete_billing_tier: {
+        Args: { p_tier_id: string }
+        Returns: undefined
+      }
+      rpc_console_list_org_invoices: {
+        Args: { p_org_id: string }
+        Returns: {
+          amount_subtotal_paise: number
+          billing_cycle: string
+          billing_tier_id: string | null
+          tier_name_snapshot: string | null
+          created_at: string
+          gst_paise: number
+          id: string
+          notes: string
+          payment_method: string
+          razorpay_payment_id: string
+          recorded_by_name: string
+          status: string
+          total_paise: number
+        }[]
+      }
+      rpc_console_record_manual_payment: {
+        Args: {
+          p_amount_paise: number
+          p_billing_cycle: string
+          p_billing_tier_id: string
+          p_client_uuid?: string | null
+          p_notes?: string | null
+          p_org_id: string
+          p_payment_date?: string
+          p_payment_method: string
+        }
+        Returns: Json
+      }
+      rpc_console_save_subscription: {
+        Args: {
+          p_org_id: string
+          p_razorpay_customer_id: string
+          p_razorpay_subscription_id: string
+        }
+        Returns: Json
+      }
       user_has_store_access: {
         Args: { target_store_id: string }
         Returns: boolean

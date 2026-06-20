@@ -16,6 +16,7 @@ export interface StaffRow {
   store_code: string | null;
   store_name: string | null;
   is_active: boolean;
+  monthly_salary: number | null;
   last_login_at: string | null;
   created_at: string;
 }
@@ -90,6 +91,36 @@ export async function createStaff(client: Client, input: CreateStaffInput): Prom
     throw new DomainError('unknown', 'Staff creation returned no profile');
   }
   return data.profile as CreatedStaff;
+}
+
+export interface UpdateStaffInput {
+  full_name?: string;
+  phone?: string | null;
+  role?: Exclude<StaffRole, 'super_admin'>;
+  store_id?: string | null;
+  is_active?: boolean;
+  monthly_salary?: number | null;
+}
+
+/**
+ * Edit an existing staff member's profile (full_name, phone, role, store_id,
+ * is_active, monthly_salary). super_admin-only; refuses self-edits and refuses
+ * to touch other super_admin rows — see rpc_update_staff for the full guard list.
+ */
+export async function updateStaff(client: Client, userId: string, input: UpdateStaffInput): Promise<void> {
+  const payload: Record<string, unknown> = {};
+  if (input.full_name !== undefined) payload.full_name = input.full_name.trim();
+  if (input.phone !== undefined) payload.phone = input.phone?.trim() || null;
+  if (input.role !== undefined) payload.role = input.role;
+  if (input.store_id !== undefined) payload.store_id = input.role === 'accountant' ? null : input.store_id;
+  if (input.is_active !== undefined) payload.is_active = input.is_active;
+  if (input.monthly_salary !== undefined) payload.monthly_salary = input.monthly_salary;
+
+  const { error } = await client.rpc('rpc_update_staff', {
+    p_user_id: userId,
+    p_payload: payload as never,
+  });
+  if (error) throw mapSupabaseError(error);
 }
 
 function humanizeError(code: string): string {

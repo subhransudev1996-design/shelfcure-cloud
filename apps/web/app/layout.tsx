@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { Inter } from 'next/font/google';
+import { Agentation } from 'agentation';
 import './globals.css';
 
 const inter = Inter({
@@ -17,7 +18,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="min-h-screen bg-zinc-50 text-zinc-900 antialiased">{children}</body>
+      <body className="min-h-screen bg-zinc-50 text-zinc-900 antialiased">
+        {children}
+        {process.env.NODE_ENV === 'development' && <Agentation />}
+      </body>
     </html>
   );
 }

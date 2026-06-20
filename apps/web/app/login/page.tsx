@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { checkOrgAccess } from '@shelfcure/api-client';
 import { getSupabaseBrowserClient } from '../../lib/supabase/client';
 import { AuthShell } from '../../components/auth-shell';
 import { Field, SubmitButton, Alert } from '../../components/form-fields';
@@ -24,6 +25,21 @@ export default function LoginPage() {
 
     if (error) {
       setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const access = await checkOrgAccess(supabase);
+      if (!access.allowed) {
+        await supabase.auth.signOut();
+        setError("Your organization's subscription has been suspended. Please contact ShelfCure support.");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      await supabase.auth.signOut();
+      setError('Could not verify account access. Please try again.');
       setLoading(false);
       return;
     }

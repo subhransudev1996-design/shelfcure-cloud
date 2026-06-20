@@ -31,6 +31,7 @@ These ADRs lock in the foundational decisions for ShelfCure Cloud v1. Each captu
 | [0015](0015-bill-print-template-json-v1.md) | Bill print template = JSON config in v1, drag-drop in v2 | Accepted | Settings |
 | [0016](0016-audit-log-monthly-partitioned.md) | Audit log partitioned monthly from day one | Accepted | Schema |
 | [0017](0017-gst-on-subscription-exclusive.md) | 18% GST added on top of subscription pricing | Accepted | Razorpay plans, invoicing |
+| [0018](0018-shelfcure-console-platform-admin-tier.md) | ShelfCure Console — platform-level admin tier above the org owner | Accepted | Schema, Auth, `apps/admin` naming, Razorpay billing, new `apps/console` |
 
 ## Process
 

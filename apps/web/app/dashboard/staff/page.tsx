@@ -2,6 +2,7 @@ import { getSupabaseServerClient } from '../../../lib/supabase/server';
 import { PageHeader } from '../../../components/ui/page-header';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { AddStaffButton } from './add-staff-button';
+import { RemoveStaffButton } from './remove-staff-button';
 
 const ROLE_LABEL: Record<string, string> = {
   super_admin: 'Organization owner',
@@ -22,11 +23,13 @@ const ROLE_TONE: Record<string, string> = {
 export default async function StaffPage() {
   const supabase = await getSupabaseServerClient();
 
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('role')
-    .single();
+  const [{ data: profile }, { data: userData }] = await Promise.all([
+    supabase.from('user_profiles').select('id, role').single(),
+    supabase.auth.getUser(),
+  ]);
   const canManage = profile?.role === 'super_admin' || profile?.role === 'store_admin';
+  const canRemove = profile?.role === 'super_admin';
+  const currentUserId = userData.user?.id;
 
   const [{ data: staff }, { data: stores }] = await Promise.all([
     supabase.rpc('rpc_list_staff'),
@@ -85,6 +88,7 @@ export default async function StaffPage() {
                 <th className="px-4 py-3">Store</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Status</th>
+                {canRemove && <th className="px-4 py-3"></th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
@@ -122,6 +126,13 @@ export default async function StaffPage() {
                       </span>
                     )}
                   </td>
+                  {canRemove && (
+                    <td className="px-4 py-3 text-right">
+                      {s.role !== 'super_admin' && s.id !== currentUserId && (
+                        <RemoveStaffButton staffId={s.id} fullName={s.full_name} isActive={s.is_active} />
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

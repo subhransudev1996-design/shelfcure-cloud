@@ -1,0 +1,125 @@
+import { listStaff } from '@shelfcure/api-client';
+import { getSupabaseServerClient } from '../../../lib/supabase/server';
+import { PageHeader } from '../../../components/ui/page-header';
+import { EmptyState } from '../../../components/ui/empty-state';
+import { AddStaffButton } from './add-staff-button';
+import { EditStaffButton } from './edit-staff-button';
+
+const ROLE_LABEL: Record<string, string> = {
+  super_admin: 'Organization owner',
+  store_admin: 'Store admin',
+  pharmacist: 'Pharmacist',
+  cashier: 'Cashier',
+  accountant: 'Accountant',
+};
+
+const ROLE_TONE: Record<string, string> = {
+  super_admin: 'bg-violet-50 text-violet-700 ring-violet-200',
+  store_admin: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+  pharmacist: 'bg-sky-50 text-sky-700 ring-sky-200',
+  cashier: 'bg-amber-50 text-amber-700 ring-amber-200',
+  accountant: 'bg-zinc-100 text-zinc-700 ring-zinc-200',
+};
+
+export default async function StaffPage() {
+  const supabase = await getSupabaseServerClient();
+
+  const [staff, { data: stores }] = await Promise.all([
+    listStaff(supabase),
+    supabase.from('stores').select('id, code, name').order('code', { ascending: true }),
+  ]);
+
+  const storeOptions = stores ?? [];
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="Staff"
+        title="Team & access"
+        description="Manage store admins, pharmacists, cashiers, and accountants across all your stores."
+        actions={<AddStaffButton stores={storeOptions} canCreateAdmins />}
+      />
+
+      {staff.length === 0 ? (
+        <EmptyState
+          icon={
+            <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6">
+              <path
+                d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M22 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            </svg>
+          }
+          title="No staff yet"
+          description="Add your first staff member so they can log in and start working on a store."
+          action={<AddStaffButton stores={storeOptions} canCreateAdmins />}
+        />
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+          <table className="w-full text-sm">
+            <thead className="bg-zinc-50 text-left text-xs font-medium uppercase tracking-wider text-zinc-500">
+              <tr>
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Role</th>
+                <th className="px-4 py-3">Store</th>
+                <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {staff.map((s) => (
+                <tr key={s.id} className="hover:bg-zinc-50/60">
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-zinc-900">{s.full_name}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ${ROLE_TONE[s.role] ?? 'bg-zinc-100 text-zinc-700 ring-zinc-200'}`}
+                    >
+                      {ROLE_LABEL[s.role] ?? s.role}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-zinc-700">
+                    {s.store_code ? (
+                      <span>
+                        <span className="font-mono text-xs text-emerald-700">{s.store_code}</span>{' '}
+                        <span className="text-zinc-500">· {s.store_name}</span>
+                      </span>
+                    ) : (
+                      <span className="text-zinc-400">All stores</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-600">{s.email}</td>
+                  <td className="px-4 py-3">
+                    {s.is_active ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs text-emerald-700">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-xs text-zinc-500">
+                        <span className="h-1.5 w-1.5 rounded-full bg-zinc-400" /> Disabled
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {s.role === 'super_admin' ? (
+                      <span className="inline-flex items-center rounded-md bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700 ring-1 ring-violet-200">
+                        Owner
+                      </span>
+                    ) : (
+                      <EditStaffButton staff={s} stores={storeOptions} />
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+}
