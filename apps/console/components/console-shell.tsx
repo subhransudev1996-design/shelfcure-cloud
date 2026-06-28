@@ -44,6 +44,21 @@ const NAV: NavItem[] = [
     ),
   },
   {
+    label: 'Master Medicines',
+    href: '/console/master-medicines',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+        <path
+          d="M10.5 3.5a5 5 0 1 1 7.07 7.07l-5.5 5.5a5 5 0 1 1-7.07-7.07l3-3 M9.5 8.5l4 4"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  {
     label: 'Platform Admins',
     href: '/console/admins',
     icon: (

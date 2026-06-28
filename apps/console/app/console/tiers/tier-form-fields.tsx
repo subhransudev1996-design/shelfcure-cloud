@@ -14,6 +14,7 @@ export interface TierFormState {
   yearly_price_rupees: string;
   max_stores: string;
   max_staff: string;
+  max_ai_scans_per_month: string;
   features: Partial<Record<FeatureKey, boolean>>;
 }
 
@@ -28,6 +29,7 @@ export const EMPTY_TIER_FORM: TierFormState = {
   yearly_price_rupees: '',
   max_stores: '',
   max_staff: '',
+  max_ai_scans_per_month: '',
   features: {},
 };
 
@@ -123,6 +125,16 @@ export function TierFormFields({
         />
       </div>
 
+      <Field
+        label="Max AI bill scans / month (optional)"
+        type="number"
+        min={1}
+        value={form.max_ai_scans_per_month}
+        onChange={(e) => set('max_ai_scans_per_month', e.target.value)}
+        placeholder="Leave blank for unlimited"
+        hint="Caps how many AI purchase-bill scans (Gemini) an org on this tier can run per calendar month."
+      />
+
       <div>
         <span className="mb-1.5 block text-sm font-medium text-zinc-800">Features</span>
         <div className="space-y-2 rounded-xl border border-zinc-200 p-3">
@@ -179,6 +191,7 @@ export function tierFormToPayload(form: TierFormState) {
     yearly_price_paise: form.yearly_price_rupees === '' ? null : Math.round(Number(form.yearly_price_rupees) * 100),
     max_stores: form.max_stores === '' ? null : Number(form.max_stores),
     max_staff: form.max_staff === '' ? null : Number(form.max_staff),
+    max_ai_scans_per_month: form.max_ai_scans_per_month === '' ? null : Number(form.max_ai_scans_per_month),
     features: form.features,
   };
 }

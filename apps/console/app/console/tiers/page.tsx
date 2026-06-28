@@ -78,7 +78,7 @@ export default async function TiersPage() {
                   <td className="px-5 py-3.5 text-zinc-700">{formatRupees(t.yearly_price_paise)}</td>
                   <td className="px-5 py-3.5 text-zinc-600">{t.trial_days}d</td>
                   <td className="px-5 py-3.5 text-zinc-600">
-                    {t.max_stores ?? '∞'} stores · {t.max_staff ?? '∞'} staff
+                    {t.max_stores ?? '∞'} stores · {t.max_staff ?? '∞'} staff · {t.max_ai_scans_per_month ?? '∞'} scans/mo
                   </td>
                   <td className="px-5 py-3.5 text-zinc-600">
                     {FEATURE_FLAGS.filter((f) => t.features[f.key]).map((f) => f.label).join(', ') || '—'}

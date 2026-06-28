@@ -1197,6 +1197,7 @@ export type Database = {
       master_medicines: {
         Row: {
           barcode: string | null
+          category: string | null
           created_at: string
           default_gst_rate: number | null
           dosage_form: string | null
@@ -1213,6 +1214,7 @@ export type Database = {
         }
         Insert: {
           barcode?: string | null
+          category?: string | null
           created_at?: string
           default_gst_rate?: number | null
           dosage_form?: string | null
@@ -1229,6 +1231,7 @@ export type Database = {
         }
         Update: {
           barcode?: string | null
+          category?: string | null
           created_at?: string
           default_gst_rate?: number | null
           dosage_form?: string | null
@@ -1586,6 +1589,7 @@ export type Database = {
           razorpay_plan_id_yearly: string | null
           max_stores: number | null
           max_staff: number | null
+          max_ai_scans_per_month: number | null
           features: Json
           created_at: string
           updated_at: string
@@ -1605,6 +1609,7 @@ export type Database = {
           razorpay_plan_id_yearly?: string | null
           max_stores?: number | null
           max_staff?: number | null
+          max_ai_scans_per_month?: number | null
           features?: Json
           created_at?: string
           updated_at?: string
@@ -1624,9 +1629,37 @@ export type Database = {
           razorpay_plan_id_yearly?: string | null
           max_stores?: number | null
           max_staff?: number | null
+          max_ai_scans_per_month?: number | null
           features?: Json
           created_at?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ai_scan_usage: {
+        Row: {
+          id: string
+          org_id: string
+          store_id: string
+          created_by: string | null
+          client_uuid: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          store_id: string
+          created_by?: string | null
+          client_uuid: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          store_id?: string
+          created_by?: string | null
+          client_uuid?: string
+          created_at?: string
         }
         Relationships: []
       }
@@ -4053,6 +4086,7 @@ export type Database = {
         Args: { p_limit?: number; p_query: string }
         Returns: {
           barcode: string | null
+          category: string | null
           created_at: string
           default_gst_rate: number | null
           dosage_form: string | null
@@ -4073,6 +4107,43 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      rpc_console_list_master_medicines: {
+        Args: { p_limit?: number; p_page?: number; p_query?: string }
+        Returns: {
+          barcode: string | null
+          category: string | null
+          created_at: string
+          default_gst_rate: number | null
+          dosage_form: string | null
+          hsn_code: string | null
+          id: string
+          manufacturer: string | null
+          name: string
+          pack_size: number | null
+          pack_unit: string | null
+          salt_composition: string | null
+          strength: string | null
+          total_count: number
+          units_per_pack: number | null
+          updated_at: string
+        }[]
+      }
+      rpc_console_create_master_medicine: {
+        Args: { p_payload: Json }
+        Returns: Json
+      }
+      rpc_console_update_master_medicine: {
+        Args: { p_id: string; p_payload: Json }
+        Returns: Json
+      }
+      rpc_console_delete_master_medicine: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      rpc_console_bulk_import_master_medicines: {
+        Args: { p_items: Json }
+        Returns: Json
       }
       rpc_pos_add_hotkey_medicine: {
         Args: {
@@ -4512,6 +4583,7 @@ export type Database = {
           razorpay_plan_id_yearly: string | null
           max_stores: number | null
           max_staff: number | null
+          max_ai_scans_per_month: number | null
           features: Json
           org_count: number
           created_at: string
@@ -4529,6 +4601,14 @@ export type Database = {
       rpc_console_delete_billing_tier: {
         Args: { p_tier_id: string }
         Returns: undefined
+      }
+      rpc_check_ai_scan_quota: {
+        Args: { p_store_id: string }
+        Returns: Json
+      }
+      rpc_record_ai_scan_usage: {
+        Args: { p_store_id: string; p_client_uuid: string }
+        Returns: Json
       }
       rpc_console_list_org_invoices: {
         Args: { p_org_id: string }

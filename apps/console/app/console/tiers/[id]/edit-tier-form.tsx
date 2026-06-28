@@ -20,6 +20,7 @@ function toForm(tier: BillingTier): TierFormState {
     yearly_price_rupees: tier.yearly_price_paise == null ? '' : String(tier.yearly_price_paise / 100),
     max_stores: tier.max_stores == null ? '' : String(tier.max_stores),
     max_staff: tier.max_staff == null ? '' : String(tier.max_staff),
+    max_ai_scans_per_month: tier.max_ai_scans_per_month == null ? '' : String(tier.max_ai_scans_per_month),
     features: tier.features,
   };
 }

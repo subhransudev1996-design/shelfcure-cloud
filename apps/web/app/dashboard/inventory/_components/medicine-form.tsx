@@ -269,6 +269,13 @@ export function MedicineForm({ mode, dosageForms, initialCategories, initial, st
 
   function fillFromMaster(mm: MasterMedicine) {
     const matchForm = dosageForms.find((d) => d.name.toLowerCase() === (mm.dosage_form ?? '').toLowerCase());
+    // master_medicines.category is a free-text suggestion (the catalog has no
+    // org_id, so it can't point at a real medicine_categories row) — match it
+    // by name against this store's own categories; no match means no change,
+    // the user can still add it via the inline "+" next to Category.
+    const matchCategory = mm.category
+      ? categories.find((c) => c.name.toLowerCase() === mm.category!.toLowerCase())
+      : undefined;
     setForm((f) => ({
       ...f,
       name: mm.name,
@@ -281,6 +288,7 @@ export function MedicineForm({ mode, dosageForms, initialCategories, initial, st
       hsn: mm.hsn_code ?? f.hsn,
       gst: mm.default_gst_rate != null ? String(mm.default_gst_rate) : f.gst,
       dosageFormId: matchForm?.id ?? f.dosageFormId,
+      categoryId: matchCategory?.id ?? f.categoryId,
     }));
     setDirty(true);
   }

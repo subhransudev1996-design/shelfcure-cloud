@@ -42,6 +42,21 @@ export async function checkDuplicateBill(
   return data as boolean;
 }
 
+// ─── AI bill-scan quota ─────────────────────────────────────────────────────────
+
+export interface AiScanQuota {
+  allowed: boolean;
+  used: number;
+  limit: number | null;
+  remaining: number | null;
+}
+
+export async function checkAiScanQuota(client: Client, storeId: string): Promise<AiScanQuota> {
+  const { data, error } = await client.rpc('rpc_check_ai_scan_quota', { p_store_id: storeId });
+  if (error) throw mapSupabaseError(error);
+  return data as unknown as AiScanQuota;
+}
+
 // ─── List ─────────────────────────────────────────────────────────────────────
 
 export interface PurchaseListRow {

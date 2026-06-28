@@ -416,6 +416,7 @@ export interface BillingTier {
   razorpay_plan_id_yearly: string | null;
   max_stores: number | null;
   max_staff: number | null;
+  max_ai_scans_per_month: number | null;
   features: Partial<Record<FeatureKey, boolean>>;
   org_count: number;
   created_at: string;
@@ -442,6 +443,7 @@ export interface BillingTierInput {
   razorpay_plan_id_yearly?: string | null;
   max_stores?: number | null;
   max_staff?: number | null;
+  max_ai_scans_per_month?: number | null;
   features?: Partial<Record<FeatureKey, boolean>>;
 }
 

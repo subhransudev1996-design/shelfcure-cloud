@@ -8,3 +8,4 @@ export * from './bill-math';
 export * from './stock-math';
 export * from './validators';
 export * from './formatters';
+export * from './medicine-match';
